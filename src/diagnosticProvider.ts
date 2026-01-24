@@ -300,19 +300,19 @@ export class RotationDiagnosticProvider {
             ));
         }
 
-        // Validate call_action_list has name=
-        if (actionContent.startsWith('call_action_list') && !actionContent.includes('name=')) {
+        // Validate call_action_list/run_action_list has name=
+        if ((actionContent.startsWith('call_action_list') || actionContent.startsWith('run_action_list')) && !actionContent.includes('name=')) {
             diagnostics.push(new vscode.Diagnostic(
                 new vscode.Range(lineNum, 0, lineNum, text.length),
-                'call_action_list requires name= parameter',
+                'call_action_list/run_action_list requires name= parameter',
                 vscode.DiagnosticSeverity.Error
             ));
         }
 
-        // Validate call_action_list references an existing list
-        const callListMatch = actionContent.match(/call_action_list.*name=(\w+)/);
-        if (callListMatch) {
-            const listName = callListMatch[1];
+        // Validate call_action_list/run_action_list references an existing list
+        const listMatch = actionContent.match(/(?:call|run)_action_list.*name=(\w+)/);
+        if (listMatch) {
+            const listName = listMatch[1];
             // Skip validation for shared/common lists
             const sharedLists = [
                 'spell_queue', 'sanity_checks', 'auto_target', 'auto_heal',
@@ -357,7 +357,7 @@ export class RotationDiagnosticProvider {
             const spellName = actionMatch[1];
             // Skip special actions
             const specialActions = [
-                'call_action_list', 'return', 'stop_casting', 'queue_spell',
+                'call_action_list', 'run_action_list', 'return', 'stop_casting', 'queue_spell',
                 'trinket_1', 'trinket_2', 'healthstone', 'health_potion',
                 'mana_potion', 'combat_potion', 'target_enemy', 'attack_target',
                 'weapon_onuse', 'wrist_onuse', 'helm_onuse', 'cloak_onuse', 'belt_onuse',

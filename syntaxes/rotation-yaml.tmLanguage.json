@@ -174,7 +174,7 @@
           }
         },
         {
-          "match": "\\b(call_action_list|return|stop_casting|queue_spell|target_enemy|attack_target|interact_target|interact_mouseover)\\b",
+          "match": "\\b(call_action_list|run_action_list|return|stop_casting|queue_spell|target_enemy|attack_target|interact_target|interact_mouseover)\\b",
           "name": "keyword.control.action.rotation-yaml"
         },
         {

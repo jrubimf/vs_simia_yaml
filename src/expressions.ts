@@ -465,5 +465,6 @@ export const SPECIAL_ACTIONS: Record<string, string> = {
     'return': 'Stop rotation evaluation',
     'stop_casting': 'Cancel current cast',
     'queue_spell': 'Cast spell from Lua addon queue',
-    'call_action_list': 'Call another action list'
+    'call_action_list': 'Call another action list',
+    'run_action_list': 'Run another action list and restart rotation'
 };

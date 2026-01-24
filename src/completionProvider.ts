@@ -382,6 +382,9 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         const items: vscode.CompletionItem[] = [];
 
         for (const [action, desc] of Object.entries(SPECIAL_ACTIONS)) {
+            if (action === 'call_action_list' || action === 'run_action_list') {
+                continue;
+            }
             const item = new vscode.CompletionItem(action, vscode.CompletionItemKind.Function);
             item.documentation = desc;
             item.detail = 'Special Action';
@@ -394,6 +397,12 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         callList.insertText = new vscode.SnippetString('call_action_list,name=${1:list_name}');
         items.push(callList);
 
+        // Add run_action_list
+        const runList = new vscode.CompletionItem('run_action_list', vscode.CompletionItemKind.Function);
+        runList.documentation = 'Run an action list and restart rotation';
+        runList.insertText = new vscode.SnippetString('run_action_list,name=${1:list_name}');
+        items.push(runList);
+
         return items;
     }
 
@@ -405,8 +414,8 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         if (valueMatch) {
             const [, optionName, partial] = valueMatch;
 
-            // Special handling for name= after call_action_list - provide defined list names
-            if (optionName === 'name' && linePrefix.includes('call_action_list') && document) {
+            // Special handling for name= after call_action_list/run_action_list - provide defined list names
+            if (optionName === 'name' && (linePrefix.includes('call_action_list') || linePrefix.includes('run_action_list')) && document) {
                 const definedLists = this.collectDefinedLists(document);
 
                 // Add shared/common lists
