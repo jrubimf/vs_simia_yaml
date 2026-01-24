@@ -79,6 +79,11 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             const [, contextType, partial] = spellContextMatch;
             items.push(...this.getSpellNameCompletions(contextType, partial));
         }
+        const nameplateSpellMatch = exprWithoutNegation.match(/^nameplates\.(buff|debuff)\.(\w*)$/);
+        if (nameplateSpellMatch) {
+            const [, auraType, partial] = nameplateSpellMatch;
+            items.push(...this.getSpellNameCompletions(`nameplates.${auraType}`, partial));
+        }
 
         // Add config variable completions (config.xxx)
         const configMatch = exprWithoutNegation.match(/^config\.(\w*)$/);
@@ -110,6 +115,11 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         if (exprWithoutNegation.startsWith('totem.') && exprWithoutNegation.split('.').length === 3) {
             items.push(...this.getTotemPropertyCompletions());
         }
+        if (/^nameplates\.debuff\.\w+\.\w*$/.test(exprWithoutNegation)) {
+            items.push(...this.getNameplateDebuffPropertyCompletions());
+        }
+
+        items.push(...this.getAnySuffixCompletions(exprWithoutNegation));
 
         // Add operators
         items.push(...this.getOperatorCompletions());
@@ -118,14 +128,18 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
     }
 
     private getAuraPropertyCompletions(prefix: string): vscode.CompletionItem[] {
+        const playerOnlyNote = (prefix === 'buff' || prefix === 'debuff')
+            ? ' (player-applied by default; use .any for any source)'
+            : '';
+
         const properties = [
-            { name: 'up', desc: 'Aura is active (returns 1/0)' },
-            { name: 'down', desc: 'Aura is NOT active' },
-            { name: 'remains', desc: 'Time remaining in seconds' },
-            { name: 'stack', desc: 'Current stack count' },
-            { name: 'duration', desc: 'Base duration of the aura' },
-            { name: 'refreshable', desc: 'Aura can be refreshed (pandemic window)' },
-            { name: 'react', desc: 'Aura is active (same as .up)' },
+            { name: 'up', desc: `Aura is active (returns 1/0)${playerOnlyNote}` },
+            { name: 'down', desc: `Aura is NOT active${playerOnlyNote}` },
+            { name: 'remains', desc: `Time remaining in seconds${playerOnlyNote}` },
+            { name: 'stack', desc: `Current stack count${playerOnlyNote}` },
+            { name: 'duration', desc: `Base duration of the aura${playerOnlyNote}` },
+            { name: 'refreshable', desc: `Aura can be refreshed (pandemic window)${playerOnlyNote}` },
+            { name: 'react', desc: `Aura is active (same as .up)${playerOnlyNote}` },
             { name: 'mine', desc: 'Aura was applied by player' },
             { name: 'magic', desc: 'Aura is Magic dispel type' },
             { name: 'curse', desc: 'Aura is Curse dispel type' },
@@ -173,6 +187,58 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             item.documentation = p.desc;
             return item;
         });
+    }
+
+    private getNameplateDebuffPropertyCompletions(): vscode.CompletionItem[] {
+        const properties = [
+            { name: 'count', desc: 'Count of nameplates with this debuff (player-applied by default; use .any for any source)' },
+        ];
+
+        return properties.map(p => {
+            const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+            item.detail = `nameplates.debuff.SPELL.${p.name}`;
+            item.documentation = p.desc;
+            return item;
+        });
+    }
+
+    private getAnySuffixCompletions(exprWithoutNegation: string): vscode.CompletionItem[] {
+        const items: vscode.CompletionItem[] = [];
+
+        const buffDebuffAnyMatch = exprWithoutNegation.match(/^(buff|debuff)\.\w+\.\w+\.(\w*)$/);
+        if (buffDebuffAnyMatch) {
+            const partial = buffDebuffAnyMatch[2] ?? '';
+            if ('any'.startsWith(partial)) {
+                const item = new vscode.CompletionItem('any', vscode.CompletionItemKind.Keyword);
+                item.detail = `${buffDebuffAnyMatch[1]}.SPELL.property.any`;
+                item.documentation = 'Check auras from any source (not just player-applied)';
+                items.push(item);
+            }
+        }
+
+        const activeDotAnyMatch = exprWithoutNegation.match(/^active_dot\.\w+\.(\w*)$/);
+        if (activeDotAnyMatch) {
+            const partial = activeDotAnyMatch[1] ?? '';
+            if ('any'.startsWith(partial)) {
+                const item = new vscode.CompletionItem('any', vscode.CompletionItemKind.Keyword);
+                item.detail = 'active_dot.SPELL.any';
+                item.documentation = 'Count DoTs from any source (not just player-applied)';
+                items.push(item);
+            }
+        }
+
+        const nameplateDebuffAnyMatch = exprWithoutNegation.match(/^nameplates\.debuff\.\w+\.count\.(\w*)$/);
+        if (nameplateDebuffAnyMatch) {
+            const partial = nameplateDebuffAnyMatch[1] ?? '';
+            if ('any'.startsWith(partial)) {
+                const item = new vscode.CompletionItem('any', vscode.CompletionItemKind.Keyword);
+                item.detail = 'nameplates.debuff.SPELL.count.any';
+                item.documentation = 'Count debuffs from any source (not just player-applied)';
+                items.push(item);
+            }
+        }
+
+        return items;
     }
 
     /**

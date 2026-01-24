@@ -1,6 +1,14 @@
 import * as vscode from 'vscode';
 import { EXPRESSIONS, STEP_OPTIONS, SPECIAL_ACTIONS } from './expressions';
 
+// Expressions that become context-sensitive in cycle= context
+const CYCLE_CONTEXT_EXPRESSIONS: Record<string, { type: string; description: string; example?: string }> = {
+    'health': { type: 'cycle', description: 'Current cycle member health percentage (0-100)', example: 'if=health<50' },
+    'health.pct': { type: 'cycle', description: 'Current cycle member health percentage', example: 'if=health.pct<=30' },
+    'range': { type: 'cycle', description: 'Range to current cycle member in yards', example: 'if=range<=40' },
+    'dead': { type: 'cycle', description: 'Current cycle member is dead', example: 'if=!dead' },
+};
+
 export class RotationHoverProvider implements vscode.HoverProvider {
 
     provideHover(
@@ -17,13 +25,21 @@ export class RotationHoverProvider implements vscode.HoverProvider {
 
         const word = document.getText(wordRange);
 
+        // Check if line has cycle= context
+        const hasCycleContext = /cycle\s*=\s*(members|tanks|healers|dps)/.test(line);
+
+        // Check for cycle-context-sensitive expressions first
+        if (hasCycleContext && CYCLE_CONTEXT_EXPRESSIONS[word]) {
+            return this.createCycleContextHover(word, CYCLE_CONTEXT_EXPRESSIONS[word]);
+        }
+
         // Check for exact expression match
         if (EXPRESSIONS[word]) {
             return this.createExpressionHover(word, EXPRESSIONS[word]);
         }
 
         // Check for template matches (buff.X.up, cooldown.X.ready, etc)
-        const templateMatch = this.matchTemplate(word);
+        const templateMatch = this.matchTemplate(word, hasCycleContext);
         if (templateMatch) {
             return templateMatch;
         }
@@ -61,6 +77,19 @@ export class RotationHoverProvider implements vscode.HoverProvider {
         return new vscode.Hover(md);
     }
 
+    private createCycleContextHover(name: string, info: { type: string; description: string; example?: string }): vscode.Hover {
+        const md = new vscode.MarkdownString();
+        md.appendMarkdown(`**${name}** *(cycle context)*\n\n`);
+        md.appendMarkdown(`*Type:* \`${info.type}\`\n\n`);
+        md.appendMarkdown(info.description);
+        md.appendMarkdown('\n\n⚠️ *This expression is context-sensitive because `cycle=` is present on this line.*');
+        if (info.example) {
+            md.appendMarkdown('\n\n**Example:**\n');
+            md.appendCodeblock(info.example, 'yaml');
+        }
+        return new vscode.Hover(md);
+    }
+
     private createStepOptionHover(name: string, info: { description: string; values?: string[] }): vscode.Hover {
         const md = new vscode.MarkdownString();
         md.appendMarkdown(`**${name}**\n\n`);
@@ -78,7 +107,22 @@ export class RotationHoverProvider implements vscode.HoverProvider {
         return new vscode.Hover(md);
     }
 
-    private matchTemplate(word: string): vscode.Hover | undefined {
+    private matchTemplate(word: string, hasCycleContext: boolean = false): vscode.Hover | undefined {
+        // buff.SPELL.property.any
+        const buffAnyMatch = word.match(/^buff\.(\w+)\.(\w+)\.any$/);
+        if (buffAnyMatch) {
+            const [, spell, prop] = buffAnyMatch;
+            const templateKeyAny = `buff.SPELL.${prop}.any`;
+            const templateKey = `buff.SPELL.${prop}`;
+            if (EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]) {
+                const md = new vscode.MarkdownString();
+                md.appendMarkdown(`**buff.${spell}.${prop}.any**\n\n`);
+                md.appendMarkdown(`Check \`${prop}\` property of buff \`${spell}\` from any source\n\n`);
+                md.appendMarkdown((EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]).description);
+                return new vscode.Hover(md);
+            }
+        }
+
         // buff.SPELL.property
         const buffMatch = word.match(/^buff\.(\w+)\.(\w+)$/);
         if (buffMatch) {
@@ -86,9 +130,31 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             const templateKey = `buff.SPELL.${prop}`;
             if (EXPRESSIONS[templateKey]) {
                 const md = new vscode.MarkdownString();
-                md.appendMarkdown(`**buff.${spell}.${prop}**\n\n`);
-                md.appendMarkdown(`Check \`${prop}\` property of buff \`${spell}\`\n\n`);
-                md.appendMarkdown(EXPRESSIONS[templateKey].description);
+                if (hasCycleContext) {
+                    md.appendMarkdown(`**buff.${spell}.${prop}** *(cycle context)*\n\n`);
+                    md.appendMarkdown(`Check \`${prop}\` property of player-applied buff \`${spell}\` on **current cycle member**\n\n`);
+                    md.appendMarkdown(EXPRESSIONS[templateKey].description);
+                    md.appendMarkdown('\n\n⚠️ *This expression is context-sensitive because `cycle=` is present on this line.*');
+                } else {
+                    md.appendMarkdown(`**buff.${spell}.${prop}**\n\n`);
+                    md.appendMarkdown(`Check \`${prop}\` property of player-applied buff \`${spell}\` (use \`.any\` for any source)\n\n`);
+                    md.appendMarkdown(EXPRESSIONS[templateKey].description);
+                }
+                return new vscode.Hover(md);
+            }
+        }
+
+        // debuff.SPELL.property.any
+        const debuffAnyMatch = word.match(/^debuff\.(\w+)\.(\w+)\.any$/);
+        if (debuffAnyMatch) {
+            const [, spell, prop] = debuffAnyMatch;
+            const templateKeyAny = `debuff.SPELL.${prop}.any`;
+            const templateKey = `debuff.SPELL.${prop}`;
+            if (EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]) {
+                const md = new vscode.MarkdownString();
+                md.appendMarkdown(`**debuff.${spell}.${prop}.any**\n\n`);
+                md.appendMarkdown(`Check \`${prop}\` property of debuff \`${spell}\` on target from any source\n\n`);
+                md.appendMarkdown((EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]).description);
                 return new vscode.Hover(md);
             }
         }
@@ -101,7 +167,7 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             if (EXPRESSIONS[templateKey]) {
                 const md = new vscode.MarkdownString();
                 md.appendMarkdown(`**debuff.${spell}.${prop}**\n\n`);
-                md.appendMarkdown(`Check \`${prop}\` property of debuff \`${spell}\` on target\n\n`);
+                md.appendMarkdown(`Check \`${prop}\` property of player-applied debuff \`${spell}\` on target (use \`.any\` for any source)\n\n`);
                 md.appendMarkdown(EXPRESSIONS[templateKey].description);
                 return new vscode.Hover(md);
             }
@@ -182,12 +248,48 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(md);
         }
 
+        // active_dot.SPELL.any
+        const activeDotAnyMatch = word.match(/^active_dot\.(\w+)\.any$/);
+        if (activeDotAnyMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**active_dot.${activeDotAnyMatch[1]}.any**\n\n`);
+            md.appendMarkdown(`Count of enemies with any \`${activeDotAnyMatch[1]}\` DoT active`);
+            return new vscode.Hover(md);
+        }
+
         // active_dot.SPELL
         const activeDotMatch = word.match(/^active_dot\.(\w+)$/);
         if (activeDotMatch) {
             const md = new vscode.MarkdownString();
             md.appendMarkdown(`**active_dot.${activeDotMatch[1]}**\n\n`);
-            md.appendMarkdown(`Count of enemies with your \`${activeDotMatch[1]}\` DoT active`);
+            md.appendMarkdown(`Count of enemies with your \`${activeDotMatch[1]}\` DoT active (player-applied only; use \`.any\` for any source)`);
+            return new vscode.Hover(md);
+        }
+
+        // nameplates.debuff.SPELL.count(.any)
+        const nameplatesDebuffAnyMatch = word.match(/^nameplates\.debuff\.(\w+)\.(\w+)\.any$/);
+        if (nameplatesDebuffAnyMatch) {
+            const [, spell, prop] = nameplatesDebuffAnyMatch;
+            const templateKey = `nameplates.debuff.SPELL.${prop}.any`;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**nameplates.debuff.${spell}.${prop}.any**\n\n`);
+            md.appendMarkdown(`Count nameplates with \`${spell}\` debuff from any source\n\n`);
+            if (EXPRESSIONS[templateKey]) {
+                md.appendMarkdown(EXPRESSIONS[templateKey].description);
+            }
+            return new vscode.Hover(md);
+        }
+
+        const nameplatesDebuffMatch = word.match(/^nameplates\.debuff\.(\w+)\.(\w+)$/);
+        if (nameplatesDebuffMatch) {
+            const [, spell, prop] = nameplatesDebuffMatch;
+            const templateKey = `nameplates.debuff.SPELL.${prop}`;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**nameplates.debuff.${spell}.${prop}**\n\n`);
+            md.appendMarkdown(`Count nameplates with your \`${spell}\` debuff (player-applied only; use \`.any\` for any source)\n\n`);
+            if (EXPRESSIONS[templateKey]) {
+                md.appendMarkdown(EXPRESSIONS[templateKey].description);
+            }
             return new vscode.Hover(md);
         }
 

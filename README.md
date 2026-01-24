@@ -16,9 +16,11 @@ VS Code extension providing IntelliSense support for Rotation YAML DSL files.
 - Properties: `.max`, `.deficit`, `.pct`, `.regen`, `.time_to_max`
 
 ### Buffs/Debuffs/DoTs
-- `buff.SPELL.up/down/remains/stack/refreshable`
-- `debuff.SPELL.up/down/remains/stack/refreshable`
+- `buff.SPELL.up/down/remains/stack/refreshable` (player-applied by default; use `.any` for any source)
+- `debuff.SPELL.up/down/remains/stack/refreshable` (player-applied by default; use `.any` for any source)
 - `dot.SPELL.ticking/remains/refreshable`
+- `active_dot.SPELL` (player-applied only; use `.any` for any source)
+- `nameplates.debuff.SPELL.count` (player-applied only; use `.any` for any source)
 
 ### Cooldowns
 - `cooldown.SPELL.ready/remains/charges/max_charges`

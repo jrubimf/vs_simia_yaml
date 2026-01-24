@@ -347,6 +347,7 @@ export class RotationDiagnosticProvider {
             { regex: /\btalent\.(\w+)/g, type: 'talent' },
             { regex: /\busable\.(\w+)/g, type: 'usable' },
             { regex: /\bactive_dot\.(\w+)/g, type: 'active_dot' },
+            { regex: /\bnameplates\.debuff\.(\w+)\./g, type: 'nameplates.debuff' },
             { regex: /\bprev_gcd\.\d\.(\w+)/g, type: 'prev_gcd' },
         ];
 

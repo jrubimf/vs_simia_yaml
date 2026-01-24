@@ -93,11 +93,29 @@
           "name": "keyword.operator.if.rotation-yaml"
         },
         {
-          "match": "\\b(buff|debuff|dot|cooldown|talent|action|totem|usable|range|prev_gcd|active_dot)\\.(\\w+)\\.(\\w+)",
+          "match": "\\b(buff|debuff|dot|cooldown|talent|action|totem|usable|range|prev_gcd)\\.(\\w+)\\.(\\w+)(\\.any)?",
+          "captures": {
+            "1": { "name": "support.class.rotation-yaml" },
+            "2": { "name": "variable.other.spell.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" },
+            "4": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(active_dot)\\.(\\w+)(\\.any)?",
           "captures": {
             "1": { "name": "support.class.rotation-yaml" },
             "2": { "name": "variable.other.spell.rotation-yaml" },
             "3": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(nameplates\\.debuff)\\.(\\w+)\\.(\\w+)(\\.any)?",
+          "captures": {
+            "1": { "name": "support.class.rotation-yaml" },
+            "2": { "name": "variable.other.spell.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" },
+            "4": { "name": "support.function.property.rotation-yaml" }
           }
         },
         {
@@ -130,7 +148,7 @@
           }
         },
         {
-          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd)\\b",
+          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead)\\b",
           "name": "variable.other.combat.rotation-yaml"
         },
         {

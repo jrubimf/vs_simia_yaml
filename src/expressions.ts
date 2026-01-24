@@ -83,28 +83,42 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'pet.health': { type: 'health', description: 'Pet health percentage', example: 'if=pet.health<40' },
 
     // Buffs (templates - SPELL is placeholder)
-    'buff.SPELL.up': { type: 'buff', description: 'Buff is active (1 if true, 0 if false)', example: 'if=buff.bloodlust.up' },
-    'buff.SPELL.down': { type: 'buff', description: 'Buff is NOT active', example: 'if=buff.shield.down' },
-    'buff.SPELL.remains': { type: 'buff', description: 'Time remaining in seconds', example: 'if=buff.haste_buff.remains<5' },
-    'buff.SPELL.stack': { type: 'buff', description: 'Current stack count', example: 'if=buff.power_stacks.stack>=3' },
-    'buff.SPELL.duration': { type: 'buff', description: 'Base duration of the buff' },
-    'buff.SPELL.refreshable': { type: 'buff', description: 'Buff can be refreshed (pandemic window)' },
-    'buff.SPELL.react': { type: 'buff', description: 'Buff is active (same as .up, for procs)' },
+    'buff.SPELL.up': { type: 'buff', description: 'Player-applied buff is active (1 if true, 0 if false). Use .any for any source.', example: 'if=buff.bloodlust.up' },
+    'buff.SPELL.down': { type: 'buff', description: 'Player-applied buff is NOT active. Use .any for any source.', example: 'if=buff.shield.down' },
+    'buff.SPELL.remains': { type: 'buff', description: 'Time remaining in seconds (player-applied). Use .any for any source.', example: 'if=buff.haste_buff.remains<5' },
+    'buff.SPELL.stack': { type: 'buff', description: 'Current stack count (player-applied). Use .any for any source.', example: 'if=buff.power_stacks.stack>=3' },
+    'buff.SPELL.duration': { type: 'buff', description: 'Base duration of the buff (player-applied). Use .any for any source.' },
+    'buff.SPELL.refreshable': { type: 'buff', description: 'Buff can be refreshed (pandemic window, player-applied). Use .any for any source.' },
+    'buff.SPELL.react': { type: 'buff', description: 'Buff is active (same as .up, for procs, player-applied). Use .any for any source.' },
+    'buff.SPELL.up.any': { type: 'buff', description: 'Buff is active from any source', example: 'if=buff.bloodlust.up.any' },
+    'buff.SPELL.down.any': { type: 'buff', description: 'Buff is NOT active from any source' },
+    'buff.SPELL.remains.any': { type: 'buff', description: 'Time remaining in seconds (any source)' },
+    'buff.SPELL.stack.any': { type: 'buff', description: 'Current stack count (any source)' },
+    'buff.SPELL.duration.any': { type: 'buff', description: 'Base duration of the buff (any source)' },
+    'buff.SPELL.refreshable.any': { type: 'buff', description: 'Buff can be refreshed (pandemic window, any source)' },
+    'buff.SPELL.react.any': { type: 'buff', description: 'Buff is active (same as .up, any source)' },
 
     // Debuffs
-    'debuff.SPELL.up': { type: 'debuff', description: 'Debuff is active on target', example: 'if=debuff.vulnerability.up' },
-    'debuff.SPELL.down': { type: 'debuff', description: 'Debuff is NOT on target', example: 'if=debuff.curse.down' },
-    'debuff.SPELL.remains': { type: 'debuff', description: 'Time remaining', example: 'if=debuff.poison.remains<3' },
-    'debuff.SPELL.stack': { type: 'debuff', description: 'Stack count', example: 'if=debuff.wound.stack<5' },
-    'debuff.SPELL.refreshable': { type: 'debuff', description: 'Debuff can be refreshed' },
-    'debuff.SPELL.ticking': { type: 'debuff', description: 'Debuff is active (alias of .up)' },
+    'debuff.SPELL.up': { type: 'debuff', description: 'Player-applied debuff is active on target. Use .any for any source.', example: 'if=debuff.vulnerability.up' },
+    'debuff.SPELL.down': { type: 'debuff', description: 'Player-applied debuff is NOT on target. Use .any for any source.', example: 'if=debuff.curse.down' },
+    'debuff.SPELL.remains': { type: 'debuff', description: 'Time remaining (player-applied). Use .any for any source.', example: 'if=debuff.poison.remains<3' },
+    'debuff.SPELL.stack': { type: 'debuff', description: 'Stack count (player-applied). Use .any for any source.', example: 'if=debuff.wound.stack<5' },
+    'debuff.SPELL.refreshable': { type: 'debuff', description: 'Debuff can be refreshed (player-applied). Use .any for any source.' },
+    'debuff.SPELL.ticking': { type: 'debuff', description: 'Debuff is active (alias of .up, player-applied). Use .any for any source.' },
+    'debuff.SPELL.up.any': { type: 'debuff', description: 'Debuff is active on target from any source' },
+    'debuff.SPELL.down.any': { type: 'debuff', description: 'Debuff is NOT on target from any source' },
+    'debuff.SPELL.remains.any': { type: 'debuff', description: 'Time remaining (any source)' },
+    'debuff.SPELL.stack.any': { type: 'debuff', description: 'Stack count (any source)' },
+    'debuff.SPELL.refreshable.any': { type: 'debuff', description: 'Debuff can be refreshed (any source)' },
+    'debuff.SPELL.ticking.any': { type: 'debuff', description: 'Debuff is active (alias of .up, any source)' },
 
     // DoTs
     'dot.SPELL.ticking': { type: 'dot', description: 'DoT is active', example: 'if=dot.corruption.ticking' },
     'dot.SPELL.remains': { type: 'dot', description: 'DoT time remaining', example: 'if=dot.corruption.remains<3' },
     'dot.SPELL.refreshable': { type: 'dot', description: 'DoT can be refreshed (pandemic)' },
     'dot.SPELL.stack': { type: 'dot', description: 'DoT stack count' },
-    'active_dot.SPELL': { type: 'dot', description: 'Count of enemies with your DoT', example: 'if=active_dot.corruption>=3' },
+    'active_dot.SPELL': { type: 'dot', description: 'Count of enemies with your DoT (player-applied only). Use .any for all sources.', example: 'if=active_dot.corruption>=3' },
+    'active_dot.SPELL.any': { type: 'dot', description: 'Count of enemies with a DoT from any source', example: 'if=active_dot.corruption.any>=3' },
 
     // Cooldowns
     'cooldown.SPELL.ready': { type: 'cooldown', description: 'Spell is ready (off cooldown)', example: 'if=cooldown.big_damage.ready' },
@@ -289,6 +303,10 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'group.in_range_10': { type: 'group', description: 'Members within 10 yards' },
     'group.in_range_30': { type: 'group', description: 'Members within 30 yards' },
     'group.in_range_40': { type: 'group', description: 'Members within 40 yards' },
+
+    // Nameplate debuff counts
+    'nameplates.debuff.SPELL.count': { type: 'debuff', description: 'Count of nameplates with your debuff active (player-applied only). Use .any for any source.' },
+    'nameplates.debuff.SPELL.count.any': { type: 'debuff', description: 'Count of nameplates with a debuff from any source' },
 
     // Totem
     'totem.SPELL.up': { type: 'totem', description: 'Totem is active', example: 'if=totem.fire_elemental.up' },
