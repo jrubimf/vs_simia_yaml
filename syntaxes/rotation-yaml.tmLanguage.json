@@ -1,0 +1,189 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Rotation YAML",
+  "scopeName": "source.rotation-yaml",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#action-line" },
+    { "include": "#root-keys" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.yaml",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.yaml",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.yaml", "match": "\\\\." }
+          ]
+        },
+        {
+          "name": "string.quoted.single.yaml",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            { "name": "constant.character.escape.yaml", "match": "''" }
+          ]
+        }
+      ]
+    },
+    "root-keys": {
+      "patterns": [
+        {
+          "match": "^(movement_allowed|variables|config|lists|actions|tier_sets|config_shared):",
+          "captures": {
+            "1": { "name": "keyword.control.rotation-yaml" }
+          }
+        },
+        {
+          "match": "^\\s{2}(\\w+):",
+          "captures": {
+            "1": { "name": "entity.name.function.rotation-yaml" }
+          }
+        }
+      ]
+    },
+    "action-line": {
+      "patterns": [
+        {
+          "match": "^\\s*-\\s*(\\w+)(\\.\\w+)?",
+          "captures": {
+            "1": { "name": "entity.name.function.spell.rotation-yaml" },
+            "2": { "name": "variable.parameter.target.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "Step options with values: range_check=none, cycle=members, etc.",
+          "match": "(range_check|casting_check|target|cycle|name|override)=(\\w+)",
+          "captures": {
+            "1": { "name": "keyword.operator.option.rotation-yaml" },
+            "2": { "name": "constant.language.option-value.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "Boolean step options: interrupt=true, ignore_cooldown=true",
+          "match": "(interrupt|ignore_cooldown|ignore_usable|ignore_movement)=(true|false)",
+          "captures": {
+            "1": { "name": "keyword.operator.option.rotation-yaml" },
+            "2": { "name": "constant.language.boolean.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "Numeric step options: hotkey=49, delay=100",
+          "match": "(hotkey|modifier|delay|global_delay|cast_remains|channel_remains)=(\\d+\\.?\\d*)",
+          "captures": {
+            "1": { "name": "keyword.operator.option.rotation-yaml" },
+            "2": { "name": "constant.numeric.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "if= condition starter",
+          "match": ",if=",
+          "name": "keyword.operator.if.rotation-yaml"
+        },
+        {
+          "match": "\\b(buff|debuff|dot|cooldown|talent|action|totem|usable|range|prev_gcd|active_dot)\\.(\\w+)\\.(\\w+)",
+          "captures": {
+            "1": { "name": "support.class.rotation-yaml" },
+            "2": { "name": "variable.other.spell.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(buff|debuff|dot|cooldown|totem)\\.(\\w+)",
+          "captures": {
+            "1": { "name": "support.class.rotation-yaml" },
+            "2": { "name": "variable.other.spell.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(player|target|focus|mouseover|pet)\\.(health|casting|channeling|moving|standing|combat|burst|stunned|rooted|feared|silenced|cc|alive|dead|exists|enemy|friendly|boss|range|valid)(\\.\\w+)?",
+          "captures": {
+            "1": { "name": "support.class.unit.rotation-yaml" },
+            "2": { "name": "support.function.property.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(player|target|focus|mouseover|pet|group|nameplates|enemies|combat)\\.(\\w+)",
+          "captures": {
+            "1": { "name": "support.class.unit.rotation-yaml" },
+            "2": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(health|energy|rage|runic_power|rune|focus|mana|combo_points|soul_shards|holy_power|chi|insanity|stagger|arcane_charges|fury|pain|maelstrom|astral_power|essence)(\\.\\w+)?",
+          "captures": {
+            "1": { "name": "variable.other.resource.rotation-yaml" },
+            "2": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd)\\b",
+          "name": "variable.other.combat.rotation-yaml"
+        },
+        {
+          "match": "\\b(var|config|settings|state)\\.(\\w+)",
+          "captures": {
+            "1": { "name": "support.class.rotation-yaml" },
+            "2": { "name": "variable.other.user.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(trinket_1|trinket_2|healthstone|health_potion|mana_potion|combat_potion|mainhand|offhand|main_hand|weapon|helm|cloak|wrist|belt)(\\.\\w+)?",
+          "captures": {
+            "1": { "name": "constant.other.equipment.rotation-yaml" },
+            "2": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(interrupts|defensives|reflectable)\\.(\\w+)(\\.\\w+)?",
+          "captures": {
+            "1": { "name": "support.class.yaml-ref.rotation-yaml" },
+            "2": { "name": "support.function.property.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\b(call_action_list|return|stop_casting|queue_spell|target_enemy|attack_target|interact_target|interact_mouseover)\\b",
+          "name": "keyword.control.action.rotation-yaml"
+        },
+        {
+          "match": "[&|!]",
+          "name": "keyword.operator.logical.rotation-yaml"
+        },
+        {
+          "match": "[<>=!]=?|>\\?|<\\?",
+          "name": "keyword.operator.comparison.rotation-yaml"
+        },
+        {
+          "match": "[+\\-*/]",
+          "name": "keyword.operator.arithmetic.rotation-yaml"
+        },
+        {
+          "match": "\\b(true|false|none)\\b",
+          "name": "constant.language.boolean.rotation-yaml"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "match": "\\b\\d+(\\.\\d+)?\\b",
+          "name": "constant.numeric.rotation-yaml"
+        }
+      ]
+    }
+  }
+}

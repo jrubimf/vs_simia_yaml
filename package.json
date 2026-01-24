@@ -1,0 +1,63 @@
+{
+  "name": "rotation-yaml-intellisense",
+  "displayName": "Rotation YAML IntelliSense",
+  "description": "IntelliSense support for rotation YAML DSL",
+  "version": "0.1.0",
+  "publisher": "simia",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "rotation-yaml",
+        "aliases": ["Rotation YAML"],
+        "extensions": [".yaml", ".yml"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rotation-yaml",
+        "scopeName": "source.rotation-yaml",
+        "path": "./syntaxes/rotation-yaml.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "files.associations": {
+        "**/yaml/**/*.yaml": "rotation-yaml"
+      }
+    },
+    "commands": [
+      {
+        "command": "rotation-yaml.reloadSpells",
+        "title": "Rotation YAML: Reload Spells"
+      },
+      {
+        "command": "rotation-yaml.status",
+        "title": "Rotation YAML: Show Status"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  }
+}
