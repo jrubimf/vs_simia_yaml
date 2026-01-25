@@ -446,7 +446,7 @@ export class RotationDiagnosticProvider {
             { pattern: /\bplayer_moving\b/g, message: 'Did you mean "player.moving"?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bactive_enemie\b/g, message: 'Did you mean "active_enemies"?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bremaning\b/g, message: 'Did you mean "remains"?', severity: vscode.DiagnosticSeverity.Warning },
-            { pattern: /\bstack\s*>/g, message: 'Did you mean ".stack>"?', severity: vscode.DiagnosticSeverity.Information },
+            { pattern: /[^.]\bstack\b\s*>/g, message: 'Did you mean ".stack>"?', severity: vscode.DiagnosticSeverity.Information },
             { pattern: /==+/g, message: 'Use single = for equality', severity: vscode.DiagnosticSeverity.Information },
             { pattern: /\band\b/gi, message: 'Use & for AND operator', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bor\b/gi, message: 'Use | for OR operator', severity: vscode.DiagnosticSeverity.Warning },

@@ -8,6 +8,7 @@
     "type": "git",
     "url": "https://github.com/jrubimf/vs_simia_yaml"
   },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
