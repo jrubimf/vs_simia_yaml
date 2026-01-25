@@ -2,7 +2,7 @@
   "name": "rotation-yaml-intellisense",
   "displayName": "Rotation YAML IntelliSense",
   "description": "IntelliSense support for rotation YAML DSL",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "simia",
   "repository": {
     "type": "git",

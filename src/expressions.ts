@@ -213,6 +213,9 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.prev_gcd_2(SPELL)': { type: 'prev', description: 'Two GCDs ago was this spell (function syntax)' },
     'player.prev_gcd_3(SPELL)': { type: 'prev', description: 'Three GCDs ago was this spell (function syntax)' },
 
+    // Last cast time
+    'lastcast.SPELL': { type: 'prev', description: 'Seconds since last successful cast (9999 if never cast)', example: 'if=lastcast.fireball>8' },
+
     // Player buff/debuff property syntax
     'player.buff.SPELL.up': { type: 'buff', description: 'Player has buff' },
     'player.buff.SPELL.up.any': { type: 'buff', description: 'Player has buff from any source' },
@@ -276,6 +279,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.empower_stage': { type: 'state', description: 'Evoker empower stage (1-4)', example: 'if=player.empower_stage>=2' },
     'player.burst.active': { type: 'state', description: 'Any burst buff is active', example: 'if=player.burst.active' },
     'player.burst.count': { type: 'state', description: 'Number of active burst buffs' },
+    'player.auto_attacking': { type: 'state', description: 'Player is auto-attacking', example: 'if=player.auto_attacking' },
 
     // Short aliases (without player. prefix)
     'dead': { type: 'state', description: 'Alias for player.dead' },
@@ -293,6 +297,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'combat': { type: 'state', description: 'Alias for player.combat' },
     'combat.time': { type: 'state', description: 'Alias for player.combat.time' },
     'empower_stage': { type: 'state', description: 'Alias for player.empower_stage (Evoker)' },
+    'auto_attacking': { type: 'state', description: 'Alias for player.auto_attacking', example: 'if=auto_attacking' },
     'boss_fight': { type: 'zone', description: 'Alias for player.boss_fight' },
 
     // Player CC/LoC
