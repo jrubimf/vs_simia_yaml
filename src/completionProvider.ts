@@ -219,6 +219,39 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             items.push(...this.getSpellNameCompletions(`group.${auraType}`, partial));
         }
 
+        // Add unit.buff/debuff spell completions (player/target/focus/mouseover/pet)
+        const unitAuraMatch = exprWithoutNegation.match(/^(player|target|focus|mouseover|pet)\.(buff|debuff)\.(\w*)$/);
+        if (unitAuraMatch) {
+            const [, unit, auraType, partial] = unitAuraMatch;
+            items.push(...this.getSpellNameCompletions(`${unit}.${auraType}`, partial));
+        }
+
+        // Add unit.buff/debuff property completions
+        const unitAuraPropMatch = exprWithoutNegation.match(/^(player|target|focus|mouseover|pet)\.(buff|debuff)\.\w+\.(\w*)$/);
+        if (unitAuraPropMatch) {
+            items.push(...this.getUnitAuraPropertyCompletions(unitAuraPropMatch[2] as 'buff' | 'debuff'));
+        }
+
+        // Add group.lowest.buff/debuff completions
+        const groupLowestAuraMatch = exprWithoutNegation.match(/^group\.lowest\.(buff|debuff)\.(\w*)$/);
+        if (groupLowestAuraMatch) {
+            const [, auraType, partial] = groupLowestAuraMatch;
+            items.push(...this.getSpellNameCompletions(`group.lowest.${auraType}`, partial));
+        }
+
+        // Add group.lowest.buff/debuff property completions
+        const groupLowestAuraPropMatch = exprWithoutNegation.match(/^group\.lowest\.(buff|debuff)\.\w+\.(\w*)$/);
+        if (groupLowestAuraPropMatch) {
+            items.push(...this.getGroupLowestAuraPropertyCompletions());
+        }
+
+        // Add pet.buff/debuff spell completions
+        const petAuraMatch = exprWithoutNegation.match(/^pet\.(buff|debuff)\.(\w*)$/);
+        if (petAuraMatch) {
+            const [, auraType, partial] = petAuraMatch;
+            items.push(...this.getSpellNameCompletions(`pet.${auraType}`, partial));
+        }
+
         // Add operators
         items.push(...this.getOperatorCompletions());
 
@@ -232,6 +265,9 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             { name: 'health.pct', desc: 'Current cycle member health percentage' },
             { name: 'health.deficit', desc: 'Current cycle member missing HP' },
             { name: 'range', desc: 'Range to current cycle member' },
+            { name: 'dead', desc: 'Current cycle member is dead' },
+            { name: 'alive', desc: 'Current cycle member is alive' },
+            { name: 'guid', desc: 'Current cycle member has a GUID' },
             { name: 'buff', desc: 'Check buff on current cycle member' },
             { name: 'debuff', desc: 'Check debuff on current cycle member' },
             { name: 'dispelable', desc: 'Check dispellable debuff on cycle member' },
@@ -364,6 +400,37 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         return properties.map(p => {
             const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
             item.detail = `nameplates.${auraType}.SPELL.${p.name}`;
+            item.documentation = p.desc;
+            return item;
+        });
+    }
+
+    private getUnitAuraPropertyCompletions(auraType: 'buff' | 'debuff'): vscode.CompletionItem[] {
+        const properties = [
+            { name: 'up', desc: `Unit has ${auraType}` },
+            { name: 'down', desc: `Unit does not have ${auraType}` },
+            { name: 'remains', desc: `${auraType} time remaining` },
+            { name: 'elapsed', desc: `Time since ${auraType} applied` },
+            { name: 'stack', desc: `${auraType} stack count` },
+        ];
+
+        return properties.map(p => {
+            const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+            item.detail = `unit.${auraType}.SPELL.${p.name}`;
+            item.documentation = p.desc;
+            return item;
+        });
+    }
+
+    private getGroupLowestAuraPropertyCompletions(): vscode.CompletionItem[] {
+        const properties = [
+            { name: 'up', desc: 'Lowest member has this buff/debuff' },
+            { name: 'remains', desc: 'Buff/debuff time remaining on lowest member' },
+        ];
+
+        return properties.map(p => {
+            const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+            item.detail = `group.lowest.buff/debuff.SPELL.${p.name}`;
             item.documentation = p.desc;
             return item;
         });

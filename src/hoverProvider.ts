@@ -9,6 +9,8 @@ const CYCLE_CONTEXT_EXPRESSIONS: Record<string, { type: string; description: str
     'health.deficit': { type: 'cycle', description: 'Current cycle member missing health amount', example: 'if=cycle.health.deficit>50000' },
     'range': { type: 'cycle', description: 'Range to current cycle member in yards', example: 'if=cycle.range<=40' },
     'dead': { type: 'cycle', description: 'Current cycle member is dead', example: 'if=!dead' },
+    'alive': { type: 'cycle', description: 'Current cycle member is alive', example: 'if=alive' },
+    'guid': { type: 'cycle', description: 'Current cycle member has a GUID', example: 'if=guid' },
 };
 
 export class RotationHoverProvider implements vscode.HoverProvider {
@@ -421,8 +423,28 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(md);
         }
 
-        // Function-call syntax: player/target/focus/mouseover.buff.up(spell)
-        const unitBuffFuncMatch = word.match(/^(player|target|focus|mouseover)\.(buff|debuff)\.(up|down|remains|stacks)\((\w+)\)$/);
+        // group.lowest.buff/debuff.SPELL.* expressions
+        const groupLowestAuraMatch = word.match(/^group\.lowest\.(buff|debuff)\.(\w+)\.(\w+)$/);
+        if (groupLowestAuraMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            const [, auraType, spell, prop] = groupLowestAuraMatch;
+            md.appendMarkdown(`Check \`${prop}\` of ${auraType} \`${spell}\` on the lowest health member`);
+            return new vscode.Hover(md);
+        }
+
+        // group.tanks/healers/dps.lowest.* expressions
+        const groupRoleLowestMatch = word.match(/^group\.(tanks|healers|dps)\.lowest\.(health\.(?:current|pct|deficit)|range)$/);
+        if (groupRoleLowestMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            const [, role, prop] = groupRoleLowestMatch;
+            md.appendMarkdown(`${prop.replace('.', ' ')} of the lowest health ${role.slice(0, -1) || role}`);
+            return new vscode.Hover(md);
+        }
+
+        // Function-call syntax: player/target/focus/mouseover/pet.buff.up(spell)
+        const unitBuffFuncMatch = word.match(/^(player|target|focus|mouseover|pet)\.(buff|debuff)\.(up|down|remains|stacks)\((\w+)\)$/);
         if (unitBuffFuncMatch) {
             const [, unit, auraType, prop, spell] = unitBuffFuncMatch;
             const md = new vscode.MarkdownString();
@@ -435,6 +457,47 @@ export class RotationHoverProvider implements vscode.HoverProvider {
                 'stacks': 'Returns current stack count'
             };
             md.appendMarkdown(propDesc[prop] || '');
+            return new vscode.Hover(md);
+        }
+
+        // Unit buff/debuff property syntax: player/target/focus/mouseover/pet.buff.SPELL.property(.any)
+        const unitBuffPropAnyMatch = word.match(/^(player|target|focus|mouseover|pet)\.(buff|debuff)\.(\w+)\.(\w+)\.any$/);
+        if (unitBuffPropAnyMatch) {
+            const [, unit, auraType, spell, prop] = unitBuffPropAnyMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check \`${prop}\` of ${auraType} \`${spell}\` on ${unit} from any source`);
+            return new vscode.Hover(md);
+        }
+
+        const unitBuffPropMatch = word.match(/^(player|target|focus|mouseover|pet)\.(buff|debuff)\.(\w+)\.(\w+)$/);
+        if (unitBuffPropMatch) {
+            const [, unit, auraType, spell, prop] = unitBuffPropMatch;
+            // Skip if it's a known property without spell (like player.buff.remains which is invalid)
+            if (['up', 'down', 'remains', 'elapsed', 'stack', 'duration', 'refreshable'].includes(spell)) {
+                return undefined;
+            }
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check \`${prop}\` of ${auraType} \`${spell}\` on ${unit} (player-applied; use \`.any\` for any source)`);
+            return new vscode.Hover(md);
+        }
+
+        // player.casting.SPELL_NAME pattern
+        const playerCastingSpellMatch = word.match(/^player\.casting\.([a-z_]+)$/);
+        if (playerCastingSpellMatch && !['spell', 'remains', 'elapsed'].includes(playerCastingSpellMatch[1])) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Returns 1 if player is casting \`${playerCastingSpellMatch[1]}\` spell`);
+            return new vscode.Hover(md);
+        }
+
+        // player.casting.spell(SPELL) function syntax
+        const playerCastingFuncMatch = word.match(/^player\.casting\.spell\((\w+)\)$/);
+        if (playerCastingFuncMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Returns 1 if player is casting \`${playerCastingFuncMatch[1]}\` spell (function syntax)`);
             return new vscode.Hover(md);
         }
 

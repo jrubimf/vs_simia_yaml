@@ -213,6 +213,19 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.prev_gcd_2(SPELL)': { type: 'prev', description: 'Two GCDs ago was this spell (function syntax)' },
     'player.prev_gcd_3(SPELL)': { type: 'prev', description: 'Three GCDs ago was this spell (function syntax)' },
 
+    // Player buff/debuff property syntax
+    'player.buff.SPELL.up': { type: 'buff', description: 'Player has buff' },
+    'player.buff.SPELL.up.any': { type: 'buff', description: 'Player has buff from any source' },
+    'player.buff.SPELL.down': { type: 'buff', description: 'Player does not have buff' },
+    'player.buff.SPELL.remains': { type: 'buff', description: 'Player buff time remaining' },
+    'player.buff.SPELL.elapsed': { type: 'buff', description: 'Time since buff applied on player' },
+    'player.buff.SPELL.stack': { type: 'buff', description: 'Player buff stack count' },
+    'player.debuff.SPELL.up': { type: 'debuff', description: 'Player has debuff' },
+    'player.debuff.SPELL.up.any': { type: 'debuff', description: 'Player has debuff from any source' },
+    'player.debuff.SPELL.down': { type: 'debuff', description: 'Player does not have debuff' },
+    'player.debuff.SPELL.remains': { type: 'debuff', description: 'Player debuff time remaining' },
+    'player.debuff.SPELL.elapsed': { type: 'debuff', description: 'Time since debuff applied on player' },
+    'player.debuff.SPELL.stack': { type: 'debuff', description: 'Player debuff stack count' },
     // Player buff/debuff function syntax
     'player.buff.remains(SPELL)': { type: 'buff', description: 'Player buff remaining duration (function syntax)', example: 'if=player.buff.remains(bloodlust)>10' },
     'player.buff.stacks(SPELL)': { type: 'buff', description: 'Player buff stack count (function syntax)' },
@@ -221,6 +234,19 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.debuff.stacks(SPELL)': { type: 'debuff', description: 'Player debuff stack count (function syntax)' },
     'player.debuff.up(SPELL)': { type: 'debuff', description: 'Player has debuff (function syntax)' },
 
+    // Target buff/debuff property syntax
+    'target.buff.SPELL.up': { type: 'buff', description: 'Target has buff' },
+    'target.buff.SPELL.up.any': { type: 'buff', description: 'Target has buff from any source' },
+    'target.buff.SPELL.down': { type: 'buff', description: 'Target does not have buff' },
+    'target.buff.SPELL.remains': { type: 'buff', description: 'Target buff time remaining' },
+    'target.buff.SPELL.elapsed': { type: 'buff', description: 'Time since buff applied on target' },
+    'target.buff.SPELL.stack': { type: 'buff', description: 'Target buff stack count' },
+    'target.debuff.SPELL.up': { type: 'debuff', description: 'Target has debuff' },
+    'target.debuff.SPELL.up.any': { type: 'debuff', description: 'Target has debuff from any source' },
+    'target.debuff.SPELL.down': { type: 'debuff', description: 'Target does not have debuff' },
+    'target.debuff.SPELL.remains': { type: 'debuff', description: 'Target debuff time remaining' },
+    'target.debuff.SPELL.elapsed': { type: 'debuff', description: 'Time since debuff applied on target' },
+    'target.debuff.SPELL.stack': { type: 'debuff', description: 'Target debuff stack count' },
     // Target debuff function syntax
     'target.debuff.remains(SPELL)': { type: 'debuff', description: 'Target debuff remaining duration (function syntax)', example: 'if=target.debuff.remains(corruption)>3' },
     'target.debuff.stacks(SPELL)': { type: 'debuff', description: 'Target debuff stack count (function syntax)' },
@@ -241,6 +267,8 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.casting': { type: 'state', description: 'Player is casting', example: 'if=!player.casting' },
     'player.channeling': { type: 'state', description: 'Player is channeling' },
     'player.casting.spell': { type: 'state', description: 'Currently casting spell ID' },
+    'player.casting.spell(SPELL)': { type: 'state', description: 'Check if casting specific spell (function syntax)', example: 'if=player.casting.spell(fireball)' },
+    'player.casting.SPELL_NAME': { type: 'state', description: 'Casting specific spell (1 if true)', example: 'if=player.casting.fireball' },
     'player.casting.remains': { type: 'state', description: 'Time remaining on cast' },
     'player.casting.elapsed': { type: 'state', description: 'Time spent casting' },
     'player.combat': { type: 'state', description: 'Player is in combat' },
@@ -411,6 +439,19 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'focus.casting.targeting_me': { type: 'unit', description: 'Focus cast is targeting player' },
     'focus.casting.spell': { type: 'unit', description: 'Focus currently casting spell ID' },
     'focus.casting.SPELL_NAME': { type: 'unit', description: 'Focus is casting specific spell by name', example: 'if=focus.casting.shadow_bolt' },
+    // Focus buff/debuff property syntax
+    'focus.buff.SPELL.up': { type: 'unit', description: 'Focus has buff' },
+    'focus.buff.SPELL.up.any': { type: 'unit', description: 'Focus has buff from any source' },
+    'focus.buff.SPELL.down': { type: 'unit', description: 'Focus does not have buff' },
+    'focus.buff.SPELL.remains': { type: 'unit', description: 'Focus buff time remaining' },
+    'focus.buff.SPELL.elapsed': { type: 'unit', description: 'Time since buff applied on focus' },
+    'focus.buff.SPELL.stack': { type: 'unit', description: 'Focus buff stack count' },
+    'focus.debuff.SPELL.up': { type: 'unit', description: 'Focus has debuff' },
+    'focus.debuff.SPELL.down': { type: 'unit', description: 'Focus does not have debuff' },
+    'focus.debuff.SPELL.remains': { type: 'unit', description: 'Focus debuff time remaining' },
+    'focus.debuff.SPELL.elapsed': { type: 'unit', description: 'Time since debuff applied on focus' },
+    'focus.debuff.SPELL.stack': { type: 'unit', description: 'Focus debuff stack count' },
+    // Focus buff/debuff function syntax
     'focus.buff.remains(SPELL)': { type: 'unit', description: 'Focus buff remaining duration (function syntax)', example: 'if=focus.buff.remains(renew)>0' },
     'focus.buff.stacks(SPELL)': { type: 'unit', description: 'Focus buff stack count (function syntax)' },
     'focus.debuff.remains(SPELL)': { type: 'unit', description: 'Focus debuff remaining duration (function syntax)' },
@@ -437,6 +478,19 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'mouseover.casting.targeting_me': { type: 'unit', description: 'Mouseover cast is targeting player' },
     'mouseover.casting.spell': { type: 'unit', description: 'Mouseover currently casting spell ID' },
     'mouseover.casting.SPELL_NAME': { type: 'unit', description: 'Mouseover is casting specific spell by name', example: 'if=mouseover.casting.fear' },
+    // Mouseover buff/debuff property syntax
+    'mouseover.buff.SPELL.up': { type: 'unit', description: 'Mouseover has buff' },
+    'mouseover.buff.SPELL.up.any': { type: 'unit', description: 'Mouseover has buff from any source' },
+    'mouseover.buff.SPELL.down': { type: 'unit', description: 'Mouseover does not have buff' },
+    'mouseover.buff.SPELL.remains': { type: 'unit', description: 'Mouseover buff time remaining' },
+    'mouseover.buff.SPELL.elapsed': { type: 'unit', description: 'Time since buff applied on mouseover' },
+    'mouseover.buff.SPELL.stack': { type: 'unit', description: 'Mouseover buff stack count' },
+    'mouseover.debuff.SPELL.up': { type: 'unit', description: 'Mouseover has debuff' },
+    'mouseover.debuff.SPELL.down': { type: 'unit', description: 'Mouseover does not have debuff' },
+    'mouseover.debuff.SPELL.remains': { type: 'unit', description: 'Mouseover debuff time remaining' },
+    'mouseover.debuff.SPELL.elapsed': { type: 'unit', description: 'Time since debuff applied on mouseover' },
+    'mouseover.debuff.SPELL.stack': { type: 'unit', description: 'Mouseover debuff stack count' },
+    // Mouseover buff/debuff function syntax
     'mouseover.buff.remains(SPELL)': { type: 'unit', description: 'Mouseover buff remaining duration (function syntax)', example: 'if=mouseover.buff.remains(renew)>0' },
     'mouseover.buff.stacks(SPELL)': { type: 'unit', description: 'Mouseover buff stack count (function syntax)' },
     'mouseover.debuff.remains(SPELL)': { type: 'unit', description: 'Mouseover debuff remaining duration (function syntax)', example: 'if=mouseover.debuff.remains(dot)<=0' },
@@ -452,6 +506,20 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'pet.health.max': { type: 'pet', description: 'Pet maximum health' },
     'pet.nearby_enemies': { type: 'pet', description: 'Enemies within 8 yards of pet' },
     'pet.nearbyenemies': { type: 'pet', description: 'Alias for pet.nearby_enemies' },
+
+    // Pet buff/debuff property syntax
+    'pet.buff.SPELL.up': { type: 'pet', description: 'Pet has buff', example: 'if=pet.buff.frenzy.up' },
+    'pet.buff.SPELL.down': { type: 'pet', description: 'Pet does not have buff', example: 'if=pet.buff.frenzy.down' },
+    'pet.buff.SPELL.remains': { type: 'pet', description: 'Pet buff time remaining', example: 'if=pet.buff.frenzy.remains<3' },
+    'pet.buff.SPELL.stack': { type: 'pet', description: 'Pet buff stack count', example: 'if=pet.buff.frenzy.stack>=3' },
+
+    // Pet buff/debuff function syntax
+    'pet.buff.remains(SPELL)': { type: 'pet', description: 'Pet buff remaining duration (function syntax)', example: 'if=pet.buff.remains(frenzy)>0' },
+    'pet.buff.stacks(SPELL)': { type: 'pet', description: 'Pet buff stack count (function syntax)' },
+    'pet.buff.up(SPELL)': { type: 'pet', description: 'Pet has buff (function syntax)' },
+    'pet.debuff.remains(SPELL)': { type: 'pet', description: 'Pet debuff remaining duration (function syntax)' },
+    'pet.debuff.stacks(SPELL)': { type: 'pet', description: 'Pet debuff stack count (function syntax)' },
+    'pet.debuff.up(SPELL)': { type: 'pet', description: 'Pet has debuff (function syntax)' },
 
     // Enemy counts
     'active_enemies': { type: 'combat', description: 'Enemies in combat range', example: 'if=active_enemies>=3' },
@@ -487,12 +555,19 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'group.lowest.health.deficit': { type: 'group', description: 'Lowest member missing HP' },
     'group.lowest.dead': { type: 'group', description: 'Lowest member is dead' },
     'group.lowest.guid': { type: 'group', description: 'Lowest member has a GUID' },
+    'group.lowest.buff.SPELL.up': { type: 'group', description: 'Lowest member has buff' },
+    'group.lowest.buff.SPELL.remains': { type: 'group', description: 'Buff remaining on lowest member' },
+    'group.lowest.debuff.SPELL.up': { type: 'group', description: 'Lowest member has debuff' },
+    'group.lowest.debuff.SPELL.remains': { type: 'group', description: 'Debuff remaining on lowest member' },
     'group.tanks.lowest.health.current': { type: 'group', description: 'Lowest tank current HP' },
     'group.tanks.lowest.health.deficit': { type: 'group', description: 'Lowest tank missing HP' },
+    'group.tanks.lowest.range': { type: 'group', description: 'Range to lowest tank' },
     'group.healers.lowest.health.current': { type: 'group', description: 'Lowest healer current HP' },
     'group.healers.lowest.health.deficit': { type: 'group', description: 'Lowest healer missing HP' },
+    'group.healers.lowest.range': { type: 'group', description: 'Range to lowest healer' },
     'group.dps.lowest.health.current': { type: 'group', description: 'Lowest DPS current HP' },
     'group.dps.lowest.health.deficit': { type: 'group', description: 'Lowest DPS missing HP' },
+    'group.dps.lowest.range': { type: 'group', description: 'Range to lowest DPS' },
     'group.buff.SPELL.count': { type: 'group', description: 'Members with buff' },
     'group.buff.SPELL.lowest.health.pct': { type: 'group', description: 'HP % of lowest with buff' },
     'group.buff.SPELL.lowest.health.current': { type: 'group', description: 'HP of lowest with buff' },
@@ -510,6 +585,9 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'cycle.health.pct': { type: 'cycle', description: 'Current cycle member health %' },
     'cycle.health.deficit': { type: 'cycle', description: 'Current cycle member missing HP' },
     'cycle.range': { type: 'cycle', description: 'Range to current cycle member' },
+    'cycle.dead': { type: 'cycle', description: 'Current cycle member is dead' },
+    'cycle.alive': { type: 'cycle', description: 'Current cycle member is alive' },
+    'cycle.guid': { type: 'cycle', description: 'Current cycle member has a GUID' },
     'cycle.buff.SPELL.up': { type: 'cycle', description: 'Cycle member has your buff' },
     'cycle.buff.SPELL.up.any': { type: 'cycle', description: 'Cycle member has buff from any source' },
     'cycle.buff.SPELL.down': { type: 'cycle', description: 'Cycle member missing your buff' },
@@ -731,9 +809,9 @@ export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
         snippet: 'global_delay=${1:100}'
     },
     'target': {
-        description: 'Direct targeting (lowest, tanks.lowest, etc)',
-        values: ['lowest', 'tanks.lowest', 'healers.lowest', 'dps.lowest'],
-        snippet: 'target=${1|lowest,tanks.lowest,healers.lowest,dps.lowest|}'
+        description: 'Direct targeting (lowest, tanks.lowest, missing.SPELL.lowest, etc)',
+        values: ['lowest', 'tanks.lowest', 'healers.lowest', 'dps.lowest', 'missing.SPELL.lowest'],
+        snippet: 'target=${1|lowest,tanks.lowest,healers.lowest,dps.lowest,missing.SPELL.lowest|}'
     },
     'cycle': {
         description: 'Cycle through group members',
