@@ -18,16 +18,21 @@ VS Code extension providing IntelliSense support for Rotation YAML DSL files.
 ### Buffs/Debuffs/DoTs
 - `buff.SPELL.up/down/remains/stack/refreshable` (player-applied by default; use `.any` for any source)
 - `debuff.SPELL.up/down/remains/stack/refreshable` (player-applied by default; use `.any` for any source)
-- `dot.SPELL.ticking/remains/refreshable`
+- `dot.SPELL.ticking/remains/stack/duration/refreshable` (player-applied by default; use `.any` for any source)
 - `active_dot.SPELL` (player-applied only; use `.any` for any source)
-- `nameplates.debuff.SPELL.count` (player-applied only; use `.any` for any source)
+- `nameplates.buff.SPELL.count/lowest/highest` (player-applied only; use `.any` for any source)
+- `nameplates.debuff.SPELL.count/lowest/highest` (player-applied only; use `.any` for any source)
 
 ### Cooldowns
 - `cooldown.SPELL.ready/remains/charges/max_charges`
 
 ### Player State
 - `player.moving`, `player.casting`, `player.combat`
-- `player.health`, `player.stunned`, `player.burst.active`
+- `player.stunned`, `player.burst.active`
+
+### Health
+- `health.current`, `health.pct`, `health.deficit`
+- `player.health.pct`, `target.health.pct`, `focus.health.pct`, `mouseover.health.pct`, `pet.health.pct`
 
 ### Target
 - `target.exists`, `target.health.pct`, `target.boss`

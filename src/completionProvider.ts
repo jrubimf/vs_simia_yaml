@@ -46,6 +46,65 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             return this.getRootKeyCompletions();
         }
 
+        // In config section (config variable properties)
+        if (this.isInSection(document, position, 'config:')) {
+            return this.getConfigSectionCompletions(linePrefix, document, position);
+        }
+
+        return undefined;
+    }
+
+    private getConfigSectionCompletions(linePrefix: string, document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
+        const items: vscode.CompletionItem[] = [];
+
+        // Check indentation level to determine context
+        const indent = linePrefix.match(/^(\s*)/)?.[1].length ?? 0;
+
+        // At 2-space indent, we're defining a config variable name
+        if (indent === 2 && !linePrefix.trim().includes(':')) {
+            // User is typing a new config variable name - no completions needed
+            return undefined;
+        }
+
+        // At 4-space indent, we're defining config variable properties
+        if (indent >= 4) {
+            const configProps = [
+                { name: 'type', desc: 'Widget type: slider, checkbox, or dropdown' },
+                { name: 'label', desc: 'Display label for the UI' },
+                { name: 'default', desc: 'Default value' },
+                { name: 'min', desc: 'Minimum value (slider only)' },
+                { name: 'max', desc: 'Maximum value (slider only)' },
+                { name: 'options', desc: 'Dropdown options array' },
+            ];
+
+            // Check if we're typing a value for type=
+            const typeMatch = linePrefix.match(/type:\s*(\w*)$/);
+            if (typeMatch) {
+                const partial = typeMatch[1];
+                const types = ['slider', 'checkbox', 'dropdown'];
+                return types
+                    .filter(t => t.startsWith(partial) || partial === '')
+                    .map(t => {
+                        const item = new vscode.CompletionItem(t, vscode.CompletionItemKind.EnumMember);
+                        item.detail = `Config widget type`;
+                        return item;
+                    });
+            }
+
+            return configProps.map(p => {
+                const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+                item.documentation = p.desc;
+                if (p.name === 'type') {
+                    item.insertText = new vscode.SnippetString('type: ${1|slider,checkbox,dropdown|}');
+                } else if (p.name === 'options') {
+                    item.insertText = new vscode.SnippetString('options:\n        - label: "${1:Option 1}"\n          value: ${2:1}');
+                } else {
+                    item.insertText = new vscode.SnippetString(`${p.name}: \${1}`);
+                }
+                return item;
+            });
+        }
+
         return undefined;
     }
 
@@ -115,11 +174,50 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         if (exprWithoutNegation.startsWith('totem.') && exprWithoutNegation.split('.').length === 3) {
             items.push(...this.getTotemPropertyCompletions());
         }
-        if (/^nameplates\.debuff\.\w+\.\w*$/.test(exprWithoutNegation)) {
-            items.push(...this.getNameplateDebuffPropertyCompletions());
+        const nameplatePropMatch = exprWithoutNegation.match(/^nameplates\.(buff|debuff)\.\w+\.\w*$/);
+        if (nameplatePropMatch) {
+            items.push(...this.getNameplateAuraPropertyCompletions(nameplatePropMatch[1] as 'buff' | 'debuff'));
         }
 
         items.push(...this.getAnySuffixCompletions(exprWithoutNegation));
+
+        // Add cycle.* completions
+        const cycleMatch = exprWithoutNegation.match(/^cycle\.(\w*)$/);
+        if (cycleMatch) {
+            items.push(...this.getCycleCompletions(cycleMatch[1]));
+        }
+        const cycleAuraMatch = exprWithoutNegation.match(/^cycle\.(buff|debuff)\.(\w*)$/);
+        if (cycleAuraMatch) {
+            const [, auraType, partial] = cycleAuraMatch;
+            items.push(...this.getSpellNameCompletions(`cycle.${auraType}`, partial));
+        }
+        const cycleAuraPropMatch = exprWithoutNegation.match(/^cycle\.(buff|debuff)\.\w+\.(\w*)$/);
+        if (cycleAuraPropMatch) {
+            items.push(...this.getCycleAuraPropertyCompletions(cycleAuraPropMatch[1] as 'buff' | 'debuff'));
+        }
+
+        // Add one_button_assistant completions
+        const obaMatch = exprWithoutNegation.match(/^one_button_assistant\.(\w*)$/);
+        if (obaMatch) {
+            items.push(...this.getSpellNameCompletions('one_button_assistant', obaMatch[1]));
+        }
+        const obaPropMatch = exprWithoutNegation.match(/^one_button_assistant\.\w+\.(\w*)$/);
+        if (obaPropMatch) {
+            const partial = obaPropMatch[1] ?? '';
+            if ('elapsed'.startsWith(partial)) {
+                const item = new vscode.CompletionItem('elapsed', vscode.CompletionItemKind.Property);
+                item.detail = 'one_button_assistant.SPELL.elapsed';
+                item.documentation = 'Seconds since spell was last shown (999 if never)';
+                items.push(item);
+            }
+        }
+
+        // Add group.buff/missing completions
+        const groupAuraMatch = exprWithoutNegation.match(/^group\.(buff|missing)\.(\w*)$/);
+        if (groupAuraMatch) {
+            const [, auraType, partial] = groupAuraMatch;
+            items.push(...this.getSpellNameCompletions(`group.${auraType}`, partial));
+        }
 
         // Add operators
         items.push(...this.getOperatorCompletions());
@@ -127,25 +225,92 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         return items;
     }
 
+    private getCycleCompletions(partial: string): vscode.CompletionItem[] {
+        const cycleProps = [
+            { name: 'health.current', desc: 'Current cycle member health value' },
+            { name: 'health.max', desc: 'Current cycle member max health' },
+            { name: 'health.pct', desc: 'Current cycle member health percentage' },
+            { name: 'health.deficit', desc: 'Current cycle member missing HP' },
+            { name: 'range', desc: 'Range to current cycle member' },
+            { name: 'buff', desc: 'Check buff on current cycle member' },
+            { name: 'debuff', desc: 'Check debuff on current cycle member' },
+            { name: 'dispelable', desc: 'Check dispellable debuff on cycle member' },
+        ];
+
+        return cycleProps
+            .filter(p => p.name.startsWith(partial) || partial === '')
+            .map(p => {
+                const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+                item.detail = `cycle.${p.name}`;
+                item.documentation = p.desc;
+                return item;
+            });
+    }
+
+    private getCycleAuraPropertyCompletions(auraType: 'buff' | 'debuff'): vscode.CompletionItem[] {
+        const properties = [
+            { name: 'up', desc: `Cycle member has ${auraType} (player-applied by default)` },
+            { name: 'down', desc: `Cycle member missing ${auraType}` },
+            { name: 'remains', desc: `${auraType} time remaining on cycle member` },
+            { name: 'elapsed', desc: `Time since ${auraType} applied on cycle member` },
+            { name: 'stack', desc: `${auraType} stacks on cycle member` },
+            { name: 'mine', desc: `Cycle member has player-applied ${auraType}` },
+        ];
+
+        return properties.map(p => {
+            const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
+            item.detail = `cycle.${auraType}.SPELL.${p.name}`;
+            item.documentation = p.desc;
+            return item;
+        });
+    }
+
     private getAuraPropertyCompletions(prefix: string): vscode.CompletionItem[] {
-        const playerOnlyNote = (prefix === 'buff' || prefix === 'debuff')
+        const playerOnlyNote = (prefix === 'buff' || prefix === 'debuff' || prefix === 'dot')
             ? ' (player-applied by default; use .any for any source)'
             : '';
 
-        const properties = [
-            { name: 'up', desc: `Aura is active (returns 1/0)${playerOnlyNote}` },
-            { name: 'down', desc: `Aura is NOT active${playerOnlyNote}` },
+        const commonAuraProps = [
             { name: 'remains', desc: `Time remaining in seconds${playerOnlyNote}` },
+            { name: 'elapsed', desc: `Time since application in seconds${playerOnlyNote}` },
             { name: 'stack', desc: `Current stack count${playerOnlyNote}` },
             { name: 'duration', desc: `Base duration of the aura${playerOnlyNote}` },
             { name: 'refreshable', desc: `Aura can be refreshed (pandemic window)${playerOnlyNote}` },
-            { name: 'react', desc: `Aura is active (same as .up)${playerOnlyNote}` },
-            { name: 'mine', desc: 'Aura was applied by player' },
-            { name: 'magic', desc: 'Aura is Magic dispel type' },
-            { name: 'curse', desc: 'Aura is Curse dispel type' },
-            { name: 'disease', desc: 'Aura is Disease dispel type' },
-            { name: 'poison', desc: 'Aura is Poison dispel type' },
         ];
+
+        const buffDebuffExtras = [
+            { name: 'mine', desc: 'Aura was applied by player' },
+            { name: 'magic', desc: `Aura is Magic dispel type${playerOnlyNote}` },
+            { name: 'curse', desc: `Aura is Curse dispel type${playerOnlyNote}` },
+            { name: 'disease', desc: `Aura is Disease dispel type${playerOnlyNote}` },
+            { name: 'poison', desc: `Aura is Poison dispel type${playerOnlyNote}` },
+            { name: 'stealable', desc: `Aura can be stolen${playerOnlyNote}` },
+            { name: 'icon', desc: `Aura icon ID${playerOnlyNote}` },
+        ];
+
+        let properties: Array<{ name: string; desc: string }>;
+        if (prefix === 'dot') {
+            properties = [
+                { name: 'ticking', desc: `DoT is active${playerOnlyNote}` },
+                ...commonAuraProps,
+            ];
+        } else if (prefix === 'debuff') {
+            properties = [
+                { name: 'up', desc: `Aura is active (returns 1/0)${playerOnlyNote}` },
+                { name: 'down', desc: `Aura is NOT active${playerOnlyNote}` },
+                { name: 'ticking', desc: `Aura is active (alias of .up)${playerOnlyNote}` },
+                ...commonAuraProps,
+                ...buffDebuffExtras,
+            ];
+        } else {
+            properties = [
+                { name: 'up', desc: `Aura is active (returns 1/0)${playerOnlyNote}` },
+                { name: 'down', desc: `Aura is NOT active${playerOnlyNote}` },
+                { name: 'react', desc: `Aura is active (same as .up)${playerOnlyNote}` },
+                ...commonAuraProps,
+                ...buffDebuffExtras,
+            ];
+        }
 
         return properties.map(p => {
             const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
@@ -189,14 +354,16 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         });
     }
 
-    private getNameplateDebuffPropertyCompletions(): vscode.CompletionItem[] {
+    private getNameplateAuraPropertyCompletions(auraType: 'buff' | 'debuff'): vscode.CompletionItem[] {
         const properties = [
-            { name: 'count', desc: 'Count of nameplates with this debuff (player-applied by default; use .any for any source)' },
+            { name: 'count', desc: `Count of nameplates with this ${auraType} (player-applied by default; use .any for any source)` },
+            { name: 'lowest', desc: `Lowest remaining ${auraType} duration on nameplates (player-applied by default; use .any for any source)` },
+            { name: 'highest', desc: `Highest remaining ${auraType} duration on nameplates (player-applied by default; use .any for any source)` },
         ];
 
         return properties.map(p => {
             const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
-            item.detail = `nameplates.debuff.SPELL.${p.name}`;
+            item.detail = `nameplates.${auraType}.SPELL.${p.name}`;
             item.documentation = p.desc;
             return item;
         });
@@ -205,7 +372,7 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
     private getAnySuffixCompletions(exprWithoutNegation: string): vscode.CompletionItem[] {
         const items: vscode.CompletionItem[] = [];
 
-        const buffDebuffAnyMatch = exprWithoutNegation.match(/^(buff|debuff)\.\w+\.\w+\.(\w*)$/);
+        const buffDebuffAnyMatch = exprWithoutNegation.match(/^(buff|debuff|dot)\.\w+\.\w+\.(\w*)$/);
         if (buffDebuffAnyMatch) {
             const partial = buffDebuffAnyMatch[2] ?? '';
             if ('any'.startsWith(partial)) {
@@ -227,13 +394,13 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             }
         }
 
-        const nameplateDebuffAnyMatch = exprWithoutNegation.match(/^nameplates\.debuff\.\w+\.count\.(\w*)$/);
-        if (nameplateDebuffAnyMatch) {
-            const partial = nameplateDebuffAnyMatch[1] ?? '';
+        const nameplateAuraAnyMatch = exprWithoutNegation.match(/^nameplates\.(buff|debuff)\.\w+\.(count|lowest|highest)\.(\w*)$/);
+        if (nameplateAuraAnyMatch) {
+            const partial = nameplateAuraAnyMatch[3] ?? '';
             if ('any'.startsWith(partial)) {
                 const item = new vscode.CompletionItem('any', vscode.CompletionItemKind.Keyword);
-                item.detail = 'nameplates.debuff.SPELL.count.any';
-                item.documentation = 'Count debuffs from any source (not just player-applied)';
+                item.detail = `nameplates.${nameplateAuraAnyMatch[1]}.SPELL.${nameplateAuraAnyMatch[2]}.any`;
+                item.documentation = 'Use auras from any source (not just player-applied)';
                 items.push(item);
             }
         }
@@ -414,8 +581,9 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
         if (valueMatch) {
             const [, optionName, partial] = valueMatch;
 
-            // Special handling for name= after call_action_list/run_action_list - provide defined list names
-            if (optionName === 'name' && (linePrefix.includes('call_action_list') || linePrefix.includes('run_action_list')) && document) {
+            // Special handling for name= after call_action_list/run_action_list OR call= - provide defined list names
+            if ((optionName === 'name' && (linePrefix.includes('call_action_list') || linePrefix.includes('run_action_list'))) || optionName === 'call') {
+                if (!document) return items;
                 const definedLists = this.collectDefinedLists(document);
 
                 // Add shared/common lists
@@ -512,6 +680,8 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             { key: 'lists', desc: 'Define action lists' },
             { key: 'actions', desc: 'Main action list (alternative to lists.main)' },
             { key: 'tier_sets', desc: 'Define tier set item IDs for set_bonus checks' },
+            { key: 'morphs', desc: 'Define spell morph variants (base_spell: morph_variant)' },
+            { key: 'entry', desc: 'Entry point list name (defaults to "main")' },
         ];
 
         return rootKeys.map(k => {

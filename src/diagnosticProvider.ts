@@ -309,8 +309,22 @@ export class RotationDiagnosticProvider {
             ));
         }
 
+        // Validate call= (alias for call_action_list) has a value
+        const callAliasMatch = actionContent.match(/\bcall=(\w*)/);
+        if (callAliasMatch && !callAliasMatch[1]) {
+            diagnostics.push(new vscode.Diagnostic(
+                new vscode.Range(lineNum, 0, lineNum, text.length),
+                'call= requires a list name',
+                vscode.DiagnosticSeverity.Error
+            ));
+        }
+
         // Validate call_action_list/run_action_list references an existing list
-        const listMatch = actionContent.match(/(?:call|run)_action_list.*name=(\w+)/);
+        let listMatch = actionContent.match(/(?:call|run)_action_list.*name=(\w+)/);
+        // Also check for call= syntax
+        if (!listMatch && callAliasMatch && callAliasMatch[1]) {
+            listMatch = callAliasMatch;
+        }
         if (listMatch) {
             const listName = listMatch[1];
             // Skip validation for shared/common lists
@@ -348,7 +362,13 @@ export class RotationDiagnosticProvider {
             { regex: /\busable\.(\w+)/g, type: 'usable' },
             { regex: /\bactive_dot\.(\w+)/g, type: 'active_dot' },
             { regex: /\bnameplates\.debuff\.(\w+)\./g, type: 'nameplates.debuff' },
+            { regex: /\bnameplates\.buff\.(\w+)\./g, type: 'nameplates.buff' },
             { regex: /\bprev_gcd\.\d\.(\w+)/g, type: 'prev_gcd' },
+            // Function-call syntax patterns
+            { regex: /\b(?:player|target|focus|mouseover)\.buff\.(?:up|down|remains|stacks)\((\w+)\)/g, type: 'buff function' },
+            { regex: /\b(?:player|target|focus|mouseover)\.debuff\.(?:up|down|remains|stacks)\((\w+)\)/g, type: 'debuff function' },
+            { regex: /\bplayer\.talent\((\w+)\)/g, type: 'talent function' },
+            { regex: /\bplayer\.prev_gcd_[1-5]\((\w+)\)/g, type: 'prev_gcd function' },
         ];
 
         // Also check action spell names (first word after -)
@@ -363,7 +383,9 @@ export class RotationDiagnosticProvider {
                 'weapon_onuse', 'wrist_onuse', 'helm_onuse', 'cloak_onuse', 'belt_onuse',
                 'interact_target', 'interact_mouseover', 'loot_a_rang', 'augment_rune',
                 'focus_party1', 'focus_party2', 'focus_party3', 'focus_party4',
-                'target_mouseover'
+                'target_mouseover', 'target_focus', 'focus_target', 'focus_mouseover', 'call',
+                // focus_raid1 through focus_raid40
+                ...Array.from({length: 40}, (_, i) => `focus_raid${i + 1}`)
             ];
             // Skip if it's a spell ID (numeric)
             if (/^\d+$/.test(spellName)) {
@@ -420,7 +442,7 @@ export class RotationDiagnosticProvider {
             { pattern: /\bcooldonw\./g, message: 'Did you mean "cooldown."?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\btalant\./g, message: 'Did you mean "talent."?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bhealth_pct\b/g, message: 'Did you mean "health.pct"?', severity: vscode.DiagnosticSeverity.Warning },
-            { pattern: /\btarget_health\b/g, message: 'Did you mean "target.health"?', severity: vscode.DiagnosticSeverity.Warning },
+            { pattern: /\btarget_health\b/g, message: 'Did you mean "target.health.pct"?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bplayer_moving\b/g, message: 'Did you mean "player.moving"?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bactive_enemie\b/g, message: 'Did you mean "active_enemies"?', severity: vscode.DiagnosticSeverity.Warning },
             { pattern: /\bremaning\b/g, message: 'Did you mean "remains"?', severity: vscode.DiagnosticSeverity.Warning },

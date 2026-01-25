@@ -41,7 +41,7 @@
     "root-keys": {
       "patterns": [
         {
-          "match": "^(movement_allowed|variables|config|lists|actions|tier_sets|config_shared):",
+          "match": "^(movement_allowed|variables|config|lists|actions|tier_sets|config_shared|morphs|entry):",
           "captures": {
             "1": { "name": "keyword.control.rotation-yaml" }
           }
@@ -93,6 +93,32 @@
           "name": "keyword.operator.if.rotation-yaml"
         },
         {
+          "comment": "Function-call syntax: player.buff.up(spell), player.talent(spell), etc.",
+          "match": "\\b(player|target|focus|mouseover)\\.(buff|debuff|talent)\\.(up|down|remains|stacks)\\((\\w+)\\)",
+          "captures": {
+            "1": { "name": "support.class.unit.rotation-yaml" },
+            "2": { "name": "support.class.rotation-yaml" },
+            "3": { "name": "support.function.property.rotation-yaml" },
+            "4": { "name": "variable.other.spell.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "Function-call syntax: player.talent(spell), player.prev_gcd_N(spell)",
+          "match": "\\b(player)\\.(talent|prev_gcd_[1-5])\\((\\w+)\\)",
+          "captures": {
+            "1": { "name": "support.class.unit.rotation-yaml" },
+            "2": { "name": "support.class.rotation-yaml" },
+            "3": { "name": "variable.other.spell.rotation-yaml" }
+          }
+        },
+        {
+          "comment": "Function-call syntax: group.count(expr), enemies.inrange(N)",
+          "match": "\\b(group|enemies|enemies\\.combat|combat\\.enemies)\\.(count|inrange)\\([^)]+\\)",
+          "captures": {
+            "0": { "name": "support.class.rotation-yaml" }
+          }
+        },
+        {
           "match": "\\b(buff|debuff|dot|cooldown|talent|action|totem|usable|range|prev_gcd)\\.(\\w+)\\.(\\w+)(\\.any)?",
           "captures": {
             "1": { "name": "support.class.rotation-yaml" },
@@ -110,7 +136,7 @@
           }
         },
         {
-          "match": "\\b(nameplates\\.debuff)\\.(\\w+)\\.(\\w+)(\\.any)?",
+          "match": "\\b(nameplates\\.(?:buff|debuff))\\.(\\w+)\\.(\\w+)(\\.any)?",
           "captures": {
             "1": { "name": "support.class.rotation-yaml" },
             "2": { "name": "variable.other.spell.rotation-yaml" },
@@ -141,15 +167,33 @@
           }
         },
         {
-          "match": "\\b(health|energy|rage|runic_power|rune|focus|mana|combo_points|soul_shards|holy_power|chi|insanity|stagger|arcane_charges|fury|pain|maelstrom|astral_power|essence)(\\.\\w+)?",
+          "match": "\\b(health|energy|rage|runic_power|rune|focus|mana|combo_points|soul_shards|soul_shard|holy_power|chi|insanity|stagger|arcane_charges|fury|pain|maelstrom|astral_power|lunar_power|essence)(\\.\\w+)?",
           "captures": {
             "1": { "name": "variable.other.resource.rotation-yaml" },
             "2": { "name": "support.function.property.rotation-yaml" }
           }
         },
         {
-          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead)\\b",
+          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead|alive|moving|standing|casting|channeling|combat|mounted|stunned|rooted|silenced|boss_fight|empower_stage|haste_pct|crit_pct|versa_pct|mastery_pct|haste|crit|versatility|mastery)\\b",
           "name": "variable.other.combat.rotation-yaml"
+        },
+        {
+          "match": "\\bcycle\\.(health|range|buff|debuff|dispelable)(\\.\\w+)*",
+          "captures": {
+            "0": { "name": "support.class.cycle.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\bone_button_assistant\\.(\\w+)(\\.elapsed)?",
+          "captures": {
+            "0": { "name": "support.class.assistant.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\bequipped\\.(\\d+)",
+          "captures": {
+            "0": { "name": "constant.other.equipment.rotation-yaml" }
+          }
         },
         {
           "match": "\\b(var|config|settings|state)\\.(\\w+)",
@@ -174,8 +218,16 @@
           }
         },
         {
-          "match": "\\b(call_action_list|run_action_list|return|stop_casting|queue_spell|target_enemy|attack_target|interact_target|interact_mouseover)\\b",
+          "match": "\\b(call_action_list|run_action_list|return|stop_casting|queue_spell|target_enemy|target_focus|target_mouseover|attack_target|interact_target|interact_mouseover|focus_target|focus_mouseover|focus_party[1-4]|focus_raid[1-9]|focus_raid[1-3][0-9]|focus_raid40)\\b",
           "name": "keyword.control.action.rotation-yaml"
+        },
+        {
+          "comment": "call= alias for call_action_list",
+          "match": "\\bcall=(\\w+)",
+          "captures": {
+            "0": { "name": "keyword.control.action.rotation-yaml" },
+            "1": { "name": "constant.language.option-value.rotation-yaml" }
+          }
         },
         {
           "match": "[&|!]",

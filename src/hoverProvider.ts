@@ -3,9 +3,11 @@ import { EXPRESSIONS, STEP_OPTIONS, SPECIAL_ACTIONS } from './expressions';
 
 // Expressions that become context-sensitive in cycle= context
 const CYCLE_CONTEXT_EXPRESSIONS: Record<string, { type: string; description: string; example?: string }> = {
-    'health': { type: 'cycle', description: 'Current cycle member health percentage (0-100)', example: 'if=health<50' },
-    'health.pct': { type: 'cycle', description: 'Current cycle member health percentage', example: 'if=health.pct<=30' },
-    'range': { type: 'cycle', description: 'Range to current cycle member in yards', example: 'if=range<=40' },
+    'health.current': { type: 'cycle', description: 'Current cycle member health value', example: 'if=cycle.health.current<200000' },
+    'health.max': { type: 'cycle', description: 'Current cycle member max health', example: 'if=cycle.health.max>500000' },
+    'health.pct': { type: 'cycle', description: 'Current cycle member health percentage', example: 'if=cycle.health.pct<=30' },
+    'health.deficit': { type: 'cycle', description: 'Current cycle member missing health amount', example: 'if=cycle.health.deficit>50000' },
+    'range': { type: 'cycle', description: 'Range to current cycle member in yards', example: 'if=cycle.range<=40' },
     'dead': { type: 'cycle', description: 'Current cycle member is dead', example: 'if=!dead' },
 };
 
@@ -173,6 +175,21 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             }
         }
 
+        // dot.SPELL.property.any
+        const dotAnyMatch = word.match(/^dot\.(\w+)\.(\w+)\.any$/);
+        if (dotAnyMatch) {
+            const [, spell, prop] = dotAnyMatch;
+            const templateKeyAny = `dot.SPELL.${prop}.any`;
+            const templateKey = `dot.SPELL.${prop}`;
+            if (EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]) {
+                const md = new vscode.MarkdownString();
+                md.appendMarkdown(`**dot.${spell}.${prop}.any**\n\n`);
+                md.appendMarkdown(`Check \`${prop}\` property of DoT \`${spell}\` from any source\n\n`);
+                md.appendMarkdown((EXPRESSIONS[templateKeyAny] || EXPRESSIONS[templateKey]).description);
+                return new vscode.Hover(md);
+            }
+        }
+
         // dot.SPELL.property
         const dotMatch = word.match(/^dot\.(\w+)\.(\w+)$/);
         if (dotMatch) {
@@ -181,7 +198,7 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             if (EXPRESSIONS[templateKey]) {
                 const md = new vscode.MarkdownString();
                 md.appendMarkdown(`**dot.${spell}.${prop}**\n\n`);
-                md.appendMarkdown(`Check \`${prop}\` property of DoT \`${spell}\`\n\n`);
+                md.appendMarkdown(`Check \`${prop}\` property of DoT \`${spell}\` (use \`.any\` for any source)\n\n`);
                 md.appendMarkdown(EXPRESSIONS[templateKey].description);
                 return new vscode.Hover(md);
             }
@@ -266,27 +283,27 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(md);
         }
 
-        // nameplates.debuff.SPELL.count(.any)
-        const nameplatesDebuffAnyMatch = word.match(/^nameplates\.debuff\.(\w+)\.(\w+)\.any$/);
-        if (nameplatesDebuffAnyMatch) {
-            const [, spell, prop] = nameplatesDebuffAnyMatch;
-            const templateKey = `nameplates.debuff.SPELL.${prop}.any`;
+        // nameplates.(buff|debuff).SPELL.property(.any)
+        const nameplatesAuraAnyMatch = word.match(/^nameplates\.(buff|debuff)\.(\w+)\.(\w+)\.any$/);
+        if (nameplatesAuraAnyMatch) {
+            const [, auraType, spell, prop] = nameplatesAuraAnyMatch;
+            const templateKey = `nameplates.${auraType}.SPELL.${prop}.any`;
             const md = new vscode.MarkdownString();
-            md.appendMarkdown(`**nameplates.debuff.${spell}.${prop}.any**\n\n`);
-            md.appendMarkdown(`Count nameplates with \`${spell}\` debuff from any source\n\n`);
+            md.appendMarkdown(`**nameplates.${auraType}.${spell}.${prop}.any**\n\n`);
+            md.appendMarkdown(`Use \`${spell}\` ${auraType} from any source\n\n`);
             if (EXPRESSIONS[templateKey]) {
                 md.appendMarkdown(EXPRESSIONS[templateKey].description);
             }
             return new vscode.Hover(md);
         }
 
-        const nameplatesDebuffMatch = word.match(/^nameplates\.debuff\.(\w+)\.(\w+)$/);
-        if (nameplatesDebuffMatch) {
-            const [, spell, prop] = nameplatesDebuffMatch;
-            const templateKey = `nameplates.debuff.SPELL.${prop}`;
+        const nameplatesAuraMatch = word.match(/^nameplates\.(buff|debuff)\.(\w+)\.(\w+)$/);
+        if (nameplatesAuraMatch) {
+            const [, auraType, spell, prop] = nameplatesAuraMatch;
+            const templateKey = `nameplates.${auraType}.SPELL.${prop}`;
             const md = new vscode.MarkdownString();
-            md.appendMarkdown(`**nameplates.debuff.${spell}.${prop}**\n\n`);
-            md.appendMarkdown(`Count nameplates with your \`${spell}\` debuff (player-applied only; use \`.any\` for any source)\n\n`);
+            md.appendMarkdown(`**nameplates.${auraType}.${spell}.${prop}**\n\n`);
+            md.appendMarkdown(`Use your \`${spell}\` ${auraType} (player-applied only; use \`.any\` for any source)\n\n`);
             if (EXPRESSIONS[templateKey]) {
                 md.appendMarkdown(EXPRESSIONS[templateKey].description);
             }
@@ -317,6 +334,158 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             const md = new vscode.MarkdownString();
             md.appendMarkdown(`**${configMatch[1]}.${configMatch[2]}**\n\n`);
             md.appendMarkdown(`User config setting. Defined in the \`config:\` section (slider, checkbox, or dropdown).`);
+            return new vscode.Hover(md);
+        }
+
+        // cycle.health.*, cycle.range, etc.
+        const cycleHealthMatch = word.match(/^cycle\.(health\.(?:current|max|pct|deficit)|range)$/);
+        if (cycleHealthMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Current cycle member ${cycleHealthMatch[1].replace('.', ' ')} value. Used in \`cycle=\` conditions.`);
+            return new vscode.Hover(md);
+        }
+
+        // cycle.buff.SPELL.property(.any/.mine)
+        const cycleBuffMatch = word.match(/^cycle\.(buff|debuff)\.(\w+)\.(\w+)(\.any|\.mine)?$/);
+        if (cycleBuffMatch) {
+            const [, auraType, spell, prop, suffix] = cycleBuffMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check \`${prop}\` of \`${spell}\` ${auraType} on current cycle member`);
+            if (suffix === '.any') {
+                md.appendMarkdown(' (from any source)');
+            } else if (suffix === '.mine') {
+                md.appendMarkdown(' (player-applied only)');
+            }
+            return new vscode.Hover(md);
+        }
+
+        // cycle.dispelable.SPELL / cycle.dispelable.list.SPELL
+        const cycleDispelMatch = word.match(/^cycle\.dispelable(\.list)?\.(\w+)$/);
+        if (cycleDispelMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check if current cycle member has dispellable debuff for \`${cycleDispelMatch[2]}\``);
+            if (cycleDispelMatch[1]) {
+                md.appendMarkdown(' (with dispel_list filtering rules)');
+            }
+            return new vscode.Hover(md);
+        }
+
+        // one_button_assistant.SPELL(.elapsed)
+        const obaMatch = word.match(/^one_button_assistant\.(\w+)(\.elapsed)?$/);
+        if (obaMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            if (obaMatch[2]) {
+                md.appendMarkdown(`Seconds since \`${obaMatch[1]}\` was last shown by one-button assistant (999 if never)`);
+            } else {
+                md.appendMarkdown(`Returns 1 if \`${obaMatch[1]}\` is currently shown by one-button assistant`);
+            }
+            return new vscode.Hover(md);
+        }
+
+        // equipped.ITEM_ID
+        const equippedMatch = word.match(/^equipped\.(\d+)$/);
+        if (equippedMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**equipped.${equippedMatch[1]}**\n\n`);
+            md.appendMarkdown(`Returns 1 if item ID ${equippedMatch[1]} is equipped`);
+            return new vscode.Hover(md);
+        }
+
+        // target.dispelable.SPELL / target.dispelable.list.SPELL
+        const targetDispelMatch = word.match(/^target\.dispelable(\.list)?\.(\w+)$/);
+        if (targetDispelMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check if target has dispellable buff/enrage for \`${targetDispelMatch[2]}\``);
+            if (targetDispelMatch[1]) {
+                md.appendMarkdown(' (with dispel_list filtering rules)');
+            }
+            return new vscode.Hover(md);
+        }
+
+        // group.buff/missing.SPELL.* expressions
+        const groupAuraMatch = word.match(/^group\.(buff|missing)\.(\w+)\.(\w+)$/);
+        if (groupAuraMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            const [, type, spell, prop] = groupAuraMatch;
+            if (type === 'buff') {
+                md.appendMarkdown(`\`${prop}\` for members with \`${spell}\` buff`);
+            } else {
+                md.appendMarkdown(`\`${prop}\` for members missing \`${spell}\` buff`);
+            }
+            return new vscode.Hover(md);
+        }
+
+        // Function-call syntax: player/target/focus/mouseover.buff.up(spell)
+        const unitBuffFuncMatch = word.match(/^(player|target|focus|mouseover)\.(buff|debuff)\.(up|down|remains|stacks)\((\w+)\)$/);
+        if (unitBuffFuncMatch) {
+            const [, unit, auraType, prop, spell] = unitBuffFuncMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Check \`${prop}\` of ${auraType} \`${spell}\` on ${unit} (function syntax)\n\n`);
+            const propDesc: Record<string, string> = {
+                'up': 'Returns 1 if active, 0 otherwise',
+                'down': 'Returns 1 if NOT active, 0 otherwise',
+                'remains': 'Returns remaining duration in seconds',
+                'stacks': 'Returns current stack count'
+            };
+            md.appendMarkdown(propDesc[prop] || '');
+            return new vscode.Hover(md);
+        }
+
+        // Function-call syntax: player.talent(spell)
+        const talentFuncMatch = word.match(/^player\.talent\((\w+)\)$/);
+        if (talentFuncMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**player.talent(${talentFuncMatch[1]})**\n\n`);
+            md.appendMarkdown(`Returns 1 if talent \`${talentFuncMatch[1]}\` is selected (function syntax)`);
+            return new vscode.Hover(md);
+        }
+
+        // Function-call syntax: player.prev_gcd_N(spell)
+        const prevGcdFuncMatch = word.match(/^player\.prev_gcd_([1-5])\((\w+)\)$/);
+        if (prevGcdFuncMatch) {
+            const [, n, spell] = prevGcdFuncMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**player.prev_gcd_${n}(${spell})**\n\n`);
+            md.appendMarkdown(`Returns 1 if \`${spell}\` was cast ${n} GCD(s) ago (function syntax)`);
+            return new vscode.Hover(md);
+        }
+
+        // group.count(expr) and enemies.inrange(N)
+        const groupCountMatch = word.match(/^group\.count\(([^)]+)\)$/);
+        if (groupCountMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**group.count(${groupCountMatch[1]})**\n\n`);
+            md.appendMarkdown(`Count of group members matching the expression inside parentheses.\n\nUse \`cycle.*\` expressions inside (e.g., \`cycle.health.pct<50\`)`);
+            return new vscode.Hover(md);
+        }
+
+        const enemiesInrangeMatch = word.match(/^enemies(?:\.combat)?\.inrange\((\d+)\)$/);
+        if (enemiesInrangeMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Count of enemies within ${enemiesInrangeMatch[1]} yards`);
+            if (word.includes('.combat')) {
+                md.appendMarkdown(' (in combat only)');
+            }
+            return new vscode.Hover(md);
+        }
+
+        // target/focus/mouseover.casting.SPELL_NAME
+        const unitCastingSpellMatch = word.match(/^(target|focus|mouseover)\.casting\.([a-z_]+)$/);
+        if (unitCastingSpellMatch && unitCastingSpellMatch[2] !== 'spell' && unitCastingSpellMatch[2] !== 'remains' &&
+            unitCastingSpellMatch[2] !== 'elapsed' && unitCastingSpellMatch[2] !== 'interruptible' &&
+            unitCastingSpellMatch[2] !== 'important' && unitCastingSpellMatch[2] !== 'targeting_me') {
+            const [, unit, spell] = unitCastingSpellMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            md.appendMarkdown(`Returns 1 if ${unit} is casting \`${spell}\` spell`);
             return new vscode.Hover(md);
         }
 
