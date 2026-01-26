@@ -723,8 +723,15 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
 
     // Variables and config
     'var.VARNAME': { type: 'variable', description: 'User-defined variable value', example: 'if=var.pooling' },
-    'config.SETTING': { type: 'config', description: 'User config setting value', example: 'if=config.use_aoe' },
-    'settings.SETTING': { type: 'config', description: 'Alias for config.SETTING' },
+
+    // User config options (SECTION 25)
+    // Config values from rotation-specific config: section or shared config_shared: section
+    // Types: slider (numeric), checkbox (boolean), dropdown (single select), multi_select (multiple options)
+    'config.SETTING': { type: 'config', description: 'User config setting value. For slider/checkbox/dropdown returns value. For multi_select returns count of selected options.', example: 'if=config.use_aoe' },
+    'config.SETTING.has(VALUE)': { type: 'config', description: 'For multi_select: returns 1 if VALUE (number or label string) is selected, 0 otherwise', example: 'if=config.burst_tools.has(1)' },
+    'config.SETTING.has(LABEL)': { type: 'config', description: 'For multi_select: returns 1 if option with LABEL is selected, 0 otherwise', example: 'if=config.burst_tools.has(Potion)' },
+    'settings.SETTING': { type: 'config', description: 'Legacy alias for config.SETTING' },
+    'settings.SETTING.has(VALUE)': { type: 'config', description: 'Legacy alias for config.SETTING.has(VALUE)' },
 
     // One Button Assistant
     'one_button_assistant.SPELL': { type: 'assistant', description: '1 if spell is currently shown by one-button assistant', example: 'if=one_button_assistant.arcane_shot' },

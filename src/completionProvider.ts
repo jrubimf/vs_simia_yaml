@@ -81,12 +81,18 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             const typeMatch = linePrefix.match(/type:\s*(\w*)$/);
             if (typeMatch) {
                 const partial = typeMatch[1];
-                const types = ['slider', 'checkbox', 'dropdown'];
+                const types = [
+                    { name: 'slider', desc: 'Numeric slider with min/max values' },
+                    { name: 'checkbox', desc: 'Boolean checkbox (true/false)' },
+                    { name: 'dropdown', desc: 'Single-select dropdown menu' },
+                    { name: 'multi_select', desc: 'Multi-select dropdown (allows multiple options)' },
+                ];
                 return types
-                    .filter(t => t.startsWith(partial) || partial === '')
+                    .filter(t => t.name.startsWith(partial) || partial === '')
                     .map(t => {
-                        const item = new vscode.CompletionItem(t, vscode.CompletionItemKind.EnumMember);
+                        const item = new vscode.CompletionItem(t.name, vscode.CompletionItemKind.EnumMember);
                         item.detail = `Config widget type`;
+                        item.documentation = t.desc;
                         return item;
                     });
             }
@@ -95,9 +101,13 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
                 const item = new vscode.CompletionItem(p.name, vscode.CompletionItemKind.Property);
                 item.documentation = p.desc;
                 if (p.name === 'type') {
-                    item.insertText = new vscode.SnippetString('type: ${1|slider,checkbox,dropdown|}');
+                    item.insertText = new vscode.SnippetString('type: ${1|slider,checkbox,dropdown,multi_select|}');
                 } else if (p.name === 'options') {
                     item.insertText = new vscode.SnippetString('options:\n        - label: "${1:Option 1}"\n          value: ${2:1}');
+                } else if (p.name === 'default') {
+                    // For multi_select, default is an array of indices
+                    item.documentation = 'Default value. For multi_select, use array of indices: [0, 2]';
+                    item.insertText = new vscode.SnippetString(`${p.name}: \${1}`);
                 } else {
                     item.insertText = new vscode.SnippetString(`${p.name}: \${1}`);
                 }
@@ -144,11 +154,24 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             items.push(...this.getSpellNameCompletions(`nameplates.${auraType}`, partial));
         }
 
-        // Add config variable completions (config.xxx)
-        const configMatch = exprWithoutNegation.match(/^config\.(\w*)$/);
+        // Add config variable completions (config.xxx and settings.xxx)
+        const configMatch = exprWithoutNegation.match(/^(config|settings)\.(\w*)$/);
         if (configMatch && document) {
-            const partial = configMatch[1];
-            items.push(...this.getConfigVarCompletions(document, partial));
+            const partial = configMatch[2];
+            items.push(...this.getConfigVarCompletions(document, partial, configMatch[1]));
+        }
+
+        // Add config.NAME.has() and settings.NAME.has() completion for multi_select types
+        const configHasMatch = exprWithoutNegation.match(/^(config|settings)\.(\w+)\.(\w*)$/);
+        if (configHasMatch) {
+            const partial = configHasMatch[3] ?? '';
+            if ('has'.startsWith(partial)) {
+                const item = new vscode.CompletionItem('has', vscode.CompletionItemKind.Method);
+                item.detail = `${configHasMatch[1]}.${configHasMatch[2]}.has(VALUE)`;
+                item.documentation = 'For multi_select config: returns 1 if VALUE (number or label) is selected, 0 otherwise';
+                item.insertText = new vscode.SnippetString('has(${1:value})');
+                items.push(item);
+            }
         }
 
         // Add variable completions (var.xxx)
@@ -478,15 +501,15 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
     /**
      * Get config variable completions from the document's config: section
      */
-    private getConfigVarCompletions(document: vscode.TextDocument, partial: string): vscode.CompletionItem[] {
+    private getConfigVarCompletions(document: vscode.TextDocument, partial: string, prefix: string = 'config'): vscode.CompletionItem[] {
         const items: vscode.CompletionItem[] = [];
         const configVars = this.collectConfigVars(document);
 
         for (const varName of configVars) {
             if (varName.startsWith(partial) || partial === '') {
                 const item = new vscode.CompletionItem(varName, vscode.CompletionItemKind.Variable);
-                item.detail = 'Config variable';
-                item.documentation = `User-configurable variable defined in config: section`;
+                item.detail = prefix === 'settings' ? 'Config variable (legacy alias)' : 'Config variable';
+                item.documentation = `User-configurable variable defined in config: section.\n\nFor multi_select type, use .has(VALUE) to check if an option is selected.`;
                 items.push(item);
             }
         }

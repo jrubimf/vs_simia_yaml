@@ -330,12 +330,28 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(md);
         }
 
+        // config.NAME.has(VALUE) / settings.NAME.has(VALUE) for multi_select
+        const configHasMatch = word.match(/^(config|settings)\.(\w+)\.has\(([^)]+)\)$/);
+        if (configHasMatch) {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${configHasMatch[1]}.${configHasMatch[2]}.has(${configHasMatch[3]})**\n\n`);
+            md.appendMarkdown(`For \`multi_select\` config: returns 1 if option with value/label \`${configHasMatch[3]}\` is selected, 0 otherwise.\n\n`);
+            md.appendMarkdown(`**Usage:**\n`);
+            md.appendCodeblock(`if=config.${configHasMatch[2]}.has(${configHasMatch[3]})`, 'yaml');
+            return new vscode.Hover(md);
+        }
+
         // config.NAME / settings.NAME
         const configMatch = word.match(/^(config|settings)\.(\w+)$/);
         if (configMatch) {
             const md = new vscode.MarkdownString();
             md.appendMarkdown(`**${configMatch[1]}.${configMatch[2]}**\n\n`);
-            md.appendMarkdown(`User config setting. Defined in the \`config:\` section (slider, checkbox, or dropdown).`);
+            md.appendMarkdown(`User config setting from the \`config:\` section.\n\n`);
+            md.appendMarkdown(`**Types:**\n`);
+            md.appendMarkdown(`- \`slider\`: returns numeric value\n`);
+            md.appendMarkdown(`- \`checkbox\`: returns 1 (true) or 0 (false)\n`);
+            md.appendMarkdown(`- \`dropdown\`: returns selected option value\n`);
+            md.appendMarkdown(`- \`multi_select\`: returns count of selected options (use \`.has()\` to check specific options)`);
             return new vscode.Hover(md);
         }
 
