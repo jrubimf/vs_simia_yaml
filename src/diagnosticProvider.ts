@@ -163,15 +163,16 @@ export class RotationDiagnosticProvider {
         definedConfigVars: Set<string>,
         definedVariables: Set<string>
     ): void {
-        // Shared config variables from _shared.yaml (always available)
+        // Shared config variables from _shared.yaml config_shared section (always available)
         const sharedConfigVars = new Set([
-            'auto_target_enabled', 'auto_target_range', 'auto_target_delay',
-            'auto_heal_enabled', 'auto_heal_range',
-            'interrupt_enabled', 'interrupt_delay', 'interrupt_threshold',
-            'defensive_enabled', 'defensive_threshold',
-            'burst_enabled', 'aoe_enabled', 'aoe_threshold',
-            'movement_threshold', 'gcd_tolerance',
-            // Add more shared config variables as needed
+            // Actual shared config from _shared.yaml
+            'healthpotion',
+            'healthstone',
+            'auto_combat',
+            'interrupt_target',
+            'interupt_mouseover',  // Note: typo in source file
+            'interrupt_focus',
+            'interrupt_pct',
         ]);
 
         // Check config.xxx references

@@ -733,6 +733,16 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'settings.SETTING': { type: 'config', description: 'Legacy alias for config.SETTING' },
     'settings.SETTING.has(VALUE)': { type: 'config', description: 'Legacy alias for config.SETTING.has(VALUE)' },
 
+    // Shared config constants (from _shared.yaml config_shared section)
+    'config.healthpotion': { type: 'config', description: 'Health potion HP threshold (slider 0-100, default 25)', example: 'if=hp.pct<=config.healthpotion' },
+    'config.healthstone': { type: 'config', description: 'Healthstone HP threshold (slider 0-100, default 40)', example: 'if=hp.pct<=config.healthstone' },
+    'config.auto_combat': { type: 'config', description: 'Auto combat settings (multi_select: Off, Quest Mob, Target Combat, Player Attacking). Returns count of selected options.', example: 'if=config.auto_combat>=1' },
+    'config.auto_combat.has(VALUE)': { type: 'config', description: 'Check if auto_combat option is selected. Values: 0=Off, 1=Quest Mob, 2=Target Combat, 3=Player Attacking', example: 'if=config.auto_combat.has(1)' },
+    'config.interrupt_target': { type: 'config', description: 'Interrupt target enabled (checkbox, default true)', example: 'if=config.interrupt_target' },
+    'config.interupt_mouseover': { type: 'config', description: 'Interrupt mouseover enabled (checkbox, default true). Note: spelled "interupt" in config.', example: 'if=config.interupt_mouseover' },
+    'config.interrupt_focus': { type: 'config', description: 'Interrupt focus enabled (checkbox, default true)', example: 'if=config.interrupt_focus' },
+    'config.interrupt_pct': { type: 'config', description: 'Interrupt cast percentage threshold (slider 0-100, default 75)', example: 'if=target.casting.elapsed>=config.interrupt_pct' },
+
     // One Button Assistant
     'one_button_assistant.SPELL': { type: 'assistant', description: '1 if spell is currently shown by one-button assistant', example: 'if=one_button_assistant.arcane_shot' },
     'one_button_assistant.SPELL.elapsed': { type: 'assistant', description: 'Seconds since spell was last shown (999 if never)', example: 'if=one_button_assistant.kill_command.elapsed<5' },
