@@ -767,13 +767,13 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
 // Step options for action lines
 export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
     'range_check': {
-        description: 'Control range validation for this action',
-        values: ['target', 'mouseover', 'focus', 'mob_count_8y', 'mob_count_40y', 'none'],
+        description: 'Control range validation for this action. Use a spell_name to check range using that spell\'s range data.',
+        values: ['target', 'mouseover', 'focus', 'mob_count_8y', 'mob_count_40y', 'none', '<spell_name>'],
         snippet: 'range_check=${1|target,mouseover,focus,mob_count_8y,none|}'
     },
     'rangecheck': {
-        description: 'SimC compatibility alias for range_check',
-        values: ['target', 'mouseover', 'focus', 'mob_count_8y', 'mob_count_40y', 'none'],
+        description: 'SimC compatibility alias for range_check. Use a spell_name to check range using that spell\'s range data.',
+        values: ['target', 'mouseover', 'focus', 'mob_count_8y', 'mob_count_40y', 'none', '<spell_name>'],
         snippet: 'rangecheck=${1|target,mouseover,focus,mob_count_8y,none|}'
     },
     'casting_check': {
