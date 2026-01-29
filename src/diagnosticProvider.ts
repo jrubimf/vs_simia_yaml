@@ -168,9 +168,12 @@ export class RotationDiagnosticProvider {
             // Actual shared config from _shared.yaml
             'healthpotion',
             'healthstone',
+            'auto_target',
+            'auto_target_ranged',
             'auto_combat',
+            'interrupt_all',
             'interrupt_target',
-            'interupt_mouseover',  // Note: typo in source file
+            'interrupt_mouseover',
             'interrupt_focus',
             'interrupt_pct',
         ]);
