@@ -382,6 +382,14 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.has_disease': { type: 'debuff', description: 'Player has any disease debuff' },
     'player.has_poison': { type: 'debuff', description: 'Player has any poison debuff' },
 
+    // Player dispelable expressions (friendly dispels - auto-detect from spec)
+    'player.dispelable': { type: 'dispel', description: 'Player has dispelable debuff (auto-detect types from spec/talents)' },
+    'player.dispelable.list': { type: 'dispel', description: 'Player has dispelable debuff with dispel_list filtering' },
+    'player.dispelable.magic': { type: 'dispel', description: 'Player has magic debuff' },
+    'player.dispelable.disease': { type: 'dispel', description: 'Player has disease debuff' },
+    'player.dispelable.poison': { type: 'dispel', description: 'Player has poison debuff' },
+    'player.dispelable.curse': { type: 'dispel', description: 'Player has curse debuff' },
+
     // Target
     'target.exists': { type: 'target', description: 'Target exists', example: 'if=target.exists' },
     'target.alive': { type: 'target', description: 'Target is alive' },
@@ -417,8 +425,13 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.threat': { type: 'target', description: 'Threat level on target (0-3, -1 if N/A)' },
     'target.lootable': { type: 'target', description: 'Target is lootable' },
     'target.guid': { type: 'target', description: 'Target has a GUID (for existence checks)' },
-    'target.dispelable.SPELL': { type: 'target', description: 'Target has dispellable buff/enrage for SPELL' },
-    'target.dispelable.list.SPELL': { type: 'target', description: 'Target dispellable with dispel_list filtering' },
+    'target.dispelable.SPELL': { type: 'target', description: 'Target has dispellable buff/enrage for SPELL (legacy explicit spell syntax)' },
+    'target.dispelable.list.SPELL': { type: 'target', description: 'Target dispellable with dispel_list filtering (legacy explicit spell syntax)' },
+    // Target purgeable expressions (offensive dispels - auto-detect from spec)
+    'target.purgeable': { type: 'target', description: 'Target has purgeable buff (auto-detect types from spec)' },
+    'target.purgeable.list': { type: 'target', description: 'Target has purgeable buff with dispel_list filtering' },
+    'target.purgeable.magic': { type: 'target', description: 'Target has magic buff' },
+    'target.purgeable.enrage': { type: 'target', description: 'Target has enrage buff' },
     'target.stunned': { type: 'target', description: 'Target is stunned' },
     'target.rooted': { type: 'target', description: 'Target is rooted' },
     'target.silenced': { type: 'target', description: 'Target is silenced' },
@@ -456,6 +469,21 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'focus.debuff.SPELL.remains': { type: 'unit', description: 'Focus debuff time remaining' },
     'focus.debuff.SPELL.elapsed': { type: 'unit', description: 'Time since debuff applied on focus' },
     'focus.debuff.SPELL.stack': { type: 'unit', description: 'Focus debuff stack count' },
+    // Focus purgeable expressions (offensive dispels)
+    'focus.purgeable': { type: 'unit', description: 'Focus has purgeable buff (auto-detect types from spec)' },
+    'focus.purgeable.list': { type: 'unit', description: 'Focus has purgeable buff with dispel_list filtering' },
+    'focus.purgeable.magic': { type: 'unit', description: 'Focus has magic buff' },
+    'focus.purgeable.enrage': { type: 'unit', description: 'Focus has enrage buff' },
+    // Focus enemy unit properties
+    'focus.boss': { type: 'unit', description: 'Focus is a boss' },
+    'focus.quest_mob': { type: 'unit', description: 'Focus is a quest mob' },
+    'focus.attackable': { type: 'unit', description: 'Focus can be attacked' },
+    'focus.combat': { type: 'unit', description: 'Focus is in combat' },
+    'focus.moving': { type: 'unit', description: 'Focus is moving' },
+    'focus.targeting_party': { type: 'unit', description: 'Focus is targeting a party member' },
+    'focus.classification': { type: 'unit', description: 'Focus classification (elite, rare, etc.)' },
+    'focus.threat': { type: 'unit', description: 'Threat level on focus (0-3, -1 if N/A)' },
+    'focus.time_to_die': { type: 'unit', description: 'Estimated seconds until focus dies' },
     // Focus buff/debuff function syntax
     'focus.buff.remains(SPELL)': { type: 'unit', description: 'Focus buff remaining duration (function syntax)', example: 'if=focus.buff.remains(renew)>0' },
     'focus.buff.stacks(SPELL)': { type: 'unit', description: 'Focus buff stack count (function syntax)' },
@@ -483,6 +511,21 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'mouseover.casting.targeting_me': { type: 'unit', description: 'Mouseover cast is targeting player' },
     'mouseover.casting.spell': { type: 'unit', description: 'Mouseover currently casting spell ID' },
     'mouseover.casting.SPELL_NAME': { type: 'unit', description: 'Mouseover is casting specific spell by name', example: 'if=mouseover.casting.fear' },
+    // Mouseover purgeable expressions (offensive dispels)
+    'mouseover.purgeable': { type: 'unit', description: 'Mouseover has purgeable buff (auto-detect types from spec)' },
+    'mouseover.purgeable.list': { type: 'unit', description: 'Mouseover has purgeable buff with dispel_list filtering' },
+    'mouseover.purgeable.magic': { type: 'unit', description: 'Mouseover has magic buff' },
+    'mouseover.purgeable.enrage': { type: 'unit', description: 'Mouseover has enrage buff' },
+    // Mouseover enemy unit properties
+    'mouseover.boss': { type: 'unit', description: 'Mouseover is a boss' },
+    'mouseover.quest_mob': { type: 'unit', description: 'Mouseover is a quest mob' },
+    'mouseover.attackable': { type: 'unit', description: 'Mouseover can be attacked' },
+    'mouseover.combat': { type: 'unit', description: 'Mouseover is in combat' },
+    'mouseover.moving': { type: 'unit', description: 'Mouseover is moving' },
+    'mouseover.targeting_party': { type: 'unit', description: 'Mouseover is targeting a party member' },
+    'mouseover.classification': { type: 'unit', description: 'Mouseover classification (elite, rare, etc.)' },
+    'mouseover.threat': { type: 'unit', description: 'Threat level on mouseover (0-3, -1 if N/A)' },
+    'mouseover.time_to_die': { type: 'unit', description: 'Estimated seconds until mouseover dies' },
     // Mouseover buff/debuff property syntax
     'mouseover.buff.SPELL.up': { type: 'unit', description: 'Mouseover has buff' },
     'mouseover.buff.SPELL.up.any': { type: 'unit', description: 'Mouseover has buff from any source' },
@@ -608,8 +651,14 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'cycle.debuff.SPELL.elapsed': { type: 'cycle', description: 'Time since debuff applied on cycle member' },
     'cycle.debuff.SPELL.elapsed.any': { type: 'cycle', description: 'Time since debuff applied (any source)' },
     'cycle.debuff.SPELL.stack': { type: 'cycle', description: 'Debuff stacks on cycle member' },
-    'cycle.dispelable.SPELL': { type: 'cycle', description: 'Cycle member has dispellable debuff for SPELL' },
-    'cycle.dispelable.list.SPELL': { type: 'cycle', description: 'Cycle member dispellable with dispel_list filtering' },
+    'cycle.dispelable': { type: 'cycle', description: 'Cycle member has dispelable debuff (auto-detect types from spec/talents)' },
+    'cycle.dispelable.list': { type: 'cycle', description: 'Cycle member has dispelable debuff with dispel_list filtering' },
+    'cycle.dispelable.magic': { type: 'cycle', description: 'Cycle member has magic debuff' },
+    'cycle.dispelable.disease': { type: 'cycle', description: 'Cycle member has disease debuff' },
+    'cycle.dispelable.poison': { type: 'cycle', description: 'Cycle member has poison debuff' },
+    'cycle.dispelable.curse': { type: 'cycle', description: 'Cycle member has curse debuff' },
+    'cycle.dispelable.SPELL': { type: 'cycle', description: 'Cycle member has dispellable debuff for SPELL (legacy explicit spell syntax)' },
+    'cycle.dispelable.list.SPELL': { type: 'cycle', description: 'Cycle member dispellable with dispel_list filtering (legacy explicit spell syntax)' },
 
     // Nameplate buff/debuff aggregations
     'nameplates.buff.SPELL.count': { type: 'buff', description: 'Count of nameplates with your buff active (player-applied only). Use .any for any source.' },
@@ -734,12 +783,17 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'settings.SETTING.has(VALUE)': { type: 'config', description: 'Legacy alias for config.SETTING.has(VALUE)' },
 
     // Shared config constants (from _shared.yaml config_shared section)
-    'config.healthpotion': { type: 'config', description: 'Health potion HP threshold (slider 0-100, default 25)', example: 'if=hp.pct<=config.healthpotion' },
-    'config.healthstone': { type: 'config', description: 'Healthstone HP threshold (slider 0-100, default 40)', example: 'if=hp.pct<=config.healthstone' },
+    'config.healthpotion': { type: 'config', description: 'Health potion HP threshold (slider 0-100, default 25)', example: 'if=health.pct<=config.healthpotion' },
+    'config.healthstone': { type: 'config', description: 'Healthstone HP threshold (slider 0-100, default 40)', example: 'if=health.pct<=config.healthstone' },
+    'config.auto_target': { type: 'config', description: 'Auto target (melee) settings (multi_select: No Target, Target is dead, Target too far). Returns count of selected options.', example: 'if=config.auto_target>=1' },
+    'config.auto_target.has(VALUE)': { type: 'config', description: 'Check if auto_target option is selected. Values: 0=No Target, 1=Target is dead, 2=Target too far', example: 'if=config.auto_target.has(0)' },
+    'config.auto_target_ranged': { type: 'config', description: 'Auto target (ranged) settings (multi_select: No Target, Target is dead, Target too far). Returns count of selected options.', example: 'if=config.auto_target_ranged>=1' },
+    'config.auto_target_ranged.has(VALUE)': { type: 'config', description: 'Check if auto_target_ranged option is selected. Values: 0=No Target, 1=Target is dead, 2=Target too far', example: 'if=config.auto_target_ranged.has(0)' },
     'config.auto_combat': { type: 'config', description: 'Auto combat settings (multi_select: Off, Quest Mob, Target Combat, Player Attacking). Returns count of selected options.', example: 'if=config.auto_combat>=1' },
     'config.auto_combat.has(VALUE)': { type: 'config', description: 'Check if auto_combat option is selected. Values: 0=Off, 1=Quest Mob, 2=Target Combat, 3=Player Attacking', example: 'if=config.auto_combat.has(1)' },
+    'config.interrupt_all': { type: 'config', description: 'Interrupt all casts (checkbox, default false)', example: 'if=config.interrupt_all' },
     'config.interrupt_target': { type: 'config', description: 'Interrupt target enabled (checkbox, default true)', example: 'if=config.interrupt_target' },
-    'config.interupt_mouseover': { type: 'config', description: 'Interrupt mouseover enabled (checkbox, default true). Note: spelled "interupt" in config.', example: 'if=config.interupt_mouseover' },
+    'config.interrupt_mouseover': { type: 'config', description: 'Interrupt mouseover enabled (checkbox, default true)', example: 'if=config.interrupt_mouseover' },
     'config.interrupt_focus': { type: 'config', description: 'Interrupt focus enabled (checkbox, default true)', example: 'if=config.interrupt_focus' },
     'config.interrupt_pct': { type: 'config', description: 'Interrupt cast percentage threshold (slider 0-100, default 75)', example: 'if=target.casting.elapsed>=config.interrupt_pct' },
 
@@ -836,9 +890,9 @@ export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
         snippet: 'target=${1|lowest,tanks.lowest,healers.lowest,dps.lowest,missing.SPELL.lowest|}'
     },
     'cycle': {
-        description: 'Cycle through group members',
-        values: ['members', 'tanks', 'healers', 'dps'],
-        snippet: 'cycle=${1|members,tanks,healers,dps|}'
+        description: 'Cycle through group members (party uses direct .party1/.party2 keybinds)',
+        values: ['members', 'tanks', 'healers', 'dps', 'party'],
+        snippet: 'cycle=${1|members,tanks,healers,dps,party|}'
     },
     'name': {
         description: 'Override step display name (for debug/lookup)',
