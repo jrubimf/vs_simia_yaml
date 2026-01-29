@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run compile:*)"
+      "Bash(npm run compile:*)",
+      "Bash(npx vsce package)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

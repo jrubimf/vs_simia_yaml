@@ -11,6 +11,14 @@ The canonical reference for all expressions, options, and DSL features:
 D:\Rubim\Projects Work\Uni\simia_client\yaml\rotation_example.yaml
 ```
 
+
+## Config constants ##
+
+These config are constants that must be added to the config namespace.
+```
+D:\Rubim\Projects Work\Uni\yaml_data\_shared.yaml
+```
+
 ## How to Update the Extension
 
 When new features, expressions, or sections are added to `rotation_example.yaml`, update the extension as follows:
