@@ -280,6 +280,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.burst.active': { type: 'state', description: 'Any burst buff is active', example: 'if=player.burst.active' },
     'player.burst.count': { type: 'state', description: 'Number of active burst buffs' },
     'player.auto_attacking': { type: 'state', description: 'Player is auto-attacking', example: 'if=player.auto_attacking' },
+    'player.loot_nearby': { type: 'state', description: 'Lootable unit nearby', example: 'if=player.loot_nearby' },
 
     // Short aliases (without player. prefix)
     'dead': { type: 'state', description: 'Alias for player.dead' },
@@ -298,6 +299,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'combat.time': { type: 'state', description: 'Alias for player.combat.time' },
     'empower_stage': { type: 'state', description: 'Alias for player.empower_stage (Evoker)' },
     'auto_attacking': { type: 'state', description: 'Alias for player.auto_attacking', example: 'if=auto_attacking' },
+    'loot_nearby': { type: 'state', description: 'Alias for player.loot_nearby' },
     'boss_fight': { type: 'zone', description: 'Alias for player.boss_fight' },
 
     // Player CC/LoC
@@ -432,6 +434,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.purgeable.list': { type: 'target', description: 'Target has purgeable buff with dispel_list filtering' },
     'target.purgeable.magic': { type: 'target', description: 'Target has magic buff' },
     'target.purgeable.enrage': { type: 'target', description: 'Target has enrage buff' },
+    'target.los': { type: 'target', description: 'Target is in line of sight (C++ managed, resets after 2s)' },
     'target.stunned': { type: 'target', description: 'Target is stunned' },
     'target.rooted': { type: 'target', description: 'Target is rooted' },
     'target.silenced': { type: 'target', description: 'Target is silenced' },
@@ -474,6 +477,14 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'focus.purgeable.list': { type: 'unit', description: 'Focus has purgeable buff with dispel_list filtering' },
     'focus.purgeable.magic': { type: 'unit', description: 'Focus has magic buff' },
     'focus.purgeable.enrage': { type: 'unit', description: 'Focus has enrage buff' },
+    // Focus LoS and validation
+    'focus.los': { type: 'unit', description: 'Focus is in line of sight (C++ managed, resets after 2s)' },
+    'focus.valid': { type: 'unit', description: 'Comprehensive focus check (exists, enemy, alive, combat)' },
+    'focus.npcid': { type: 'unit', description: 'NPC ID from focus GUID (0 for players/pets)' },
+    'focus.bypass_combat': { type: 'unit', description: 'Focus NPC bypasses combat checks (from _npcdata.yaml)' },
+    'focus.should_stun': { type: 'unit', description: 'Focus NPC should be stunned (from _npcdata.yaml)' },
+    'focus.should_slow': { type: 'unit', description: 'Focus NPC should be slowed (from _npcdata.yaml)' },
+    'focus.lootable': { type: 'unit', description: 'Focus is lootable' },
     // Focus enemy unit properties
     'focus.boss': { type: 'unit', description: 'Focus is a boss' },
     'focus.quest_mob': { type: 'unit', description: 'Focus is a quest mob' },
@@ -516,6 +527,13 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'mouseover.purgeable.list': { type: 'unit', description: 'Mouseover has purgeable buff with dispel_list filtering' },
     'mouseover.purgeable.magic': { type: 'unit', description: 'Mouseover has magic buff' },
     'mouseover.purgeable.enrage': { type: 'unit', description: 'Mouseover has enrage buff' },
+    // Mouseover LoS and validation
+    'mouseover.los': { type: 'unit', description: 'Mouseover is in line of sight (C++ managed, resets after 2s)' },
+    'mouseover.valid': { type: 'unit', description: 'Comprehensive mouseover check (exists, enemy, alive, combat)' },
+    'mouseover.npcid': { type: 'unit', description: 'NPC ID from mouseover GUID (0 for players/pets)' },
+    'mouseover.bypass_combat': { type: 'unit', description: 'Mouseover NPC bypasses combat checks (from _npcdata.yaml)' },
+    'mouseover.should_stun': { type: 'unit', description: 'Mouseover NPC should be stunned (from _npcdata.yaml)' },
+    'mouseover.should_slow': { type: 'unit', description: 'Mouseover NPC should be slowed (from _npcdata.yaml)' },
     // Mouseover enemy unit properties
     'mouseover.boss': { type: 'unit', description: 'Mouseover is a boss' },
     'mouseover.quest_mob': { type: 'unit', description: 'Mouseover is a quest mob' },
@@ -812,6 +830,36 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.debuff.SPELL.points.2': { type: 'debuff', description: 'Player debuff effect point 2 value' },
     'target.buff.SPELL.points.1': { type: 'buff', description: 'Target buff effect point 1 value' },
     'target.buff.SPELL.points.2': { type: 'buff', description: 'Target buff effect point 2 value' },
+
+    // Casting target expressions (resolve cast target by name to party/raid member)
+    'casting_target.buff.SPELL.up': { type: 'casting_target', description: 'Cast target has buff (target caster by default)' },
+    'casting_target.buff.SPELL.down': { type: 'casting_target', description: 'Cast target missing buff' },
+    'casting_target.buff.SPELL.remains': { type: 'casting_target', description: 'Buff remaining on cast target' },
+    'casting_target.buff.SPELL.stack': { type: 'casting_target', description: 'Buff stacks on cast target' },
+    'casting_target.health.pct': { type: 'casting_target', description: 'Cast target health %', example: 'if=casting_target.health.pct<50' },
+    'casting_target.health.current': { type: 'casting_target', description: 'Cast target current HP' },
+    'casting_target.health.deficit': { type: 'casting_target', description: 'Cast target missing HP' },
+    'target.casting_target.buff.SPELL.up': { type: 'casting_target', description: 'Target\'s cast target has buff' },
+    'target.casting_target.buff.SPELL.down': { type: 'casting_target', description: 'Target\'s cast target missing buff' },
+    'target.casting_target.buff.SPELL.remains': { type: 'casting_target', description: 'Buff remaining on target\'s cast target' },
+    'target.casting_target.buff.SPELL.stack': { type: 'casting_target', description: 'Buff stacks on target\'s cast target' },
+    'target.casting_target.health.pct': { type: 'casting_target', description: 'Target\'s cast target health %' },
+    'target.casting_target.health.current': { type: 'casting_target', description: 'Target\'s cast target current HP' },
+    'target.casting_target.health.deficit': { type: 'casting_target', description: 'Target\'s cast target missing HP' },
+    'focus.casting_target.buff.SPELL.up': { type: 'casting_target', description: 'Focus\'s cast target has buff' },
+    'focus.casting_target.buff.SPELL.down': { type: 'casting_target', description: 'Focus\'s cast target missing buff' },
+    'focus.casting_target.buff.SPELL.remains': { type: 'casting_target', description: 'Buff remaining on focus\'s cast target' },
+    'focus.casting_target.buff.SPELL.stack': { type: 'casting_target', description: 'Buff stacks on focus\'s cast target' },
+    'focus.casting_target.health.pct': { type: 'casting_target', description: 'Focus\'s cast target health %' },
+    'focus.casting_target.health.current': { type: 'casting_target', description: 'Focus\'s cast target current HP' },
+    'focus.casting_target.health.deficit': { type: 'casting_target', description: 'Focus\'s cast target missing HP' },
+    'mouseover.casting_target.buff.SPELL.up': { type: 'casting_target', description: 'Mouseover\'s cast target has buff' },
+    'mouseover.casting_target.buff.SPELL.down': { type: 'casting_target', description: 'Mouseover\'s cast target missing buff' },
+    'mouseover.casting_target.buff.SPELL.remains': { type: 'casting_target', description: 'Buff remaining on mouseover\'s cast target' },
+    'mouseover.casting_target.buff.SPELL.stack': { type: 'casting_target', description: 'Buff stacks on mouseover\'s cast target' },
+    'mouseover.casting_target.health.pct': { type: 'casting_target', description: 'Mouseover\'s cast target health %' },
+    'mouseover.casting_target.health.current': { type: 'casting_target', description: 'Mouseover\'s cast target current HP' },
+    'mouseover.casting_target.health.deficit': { type: 'casting_target', description: 'Mouseover\'s cast target missing HP' },
 
     // Literals
     'true': { type: 'literal', description: 'Always true (1)' },
