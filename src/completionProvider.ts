@@ -123,11 +123,25 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
 
         // Get the current expression context (what's after if= or &/|)
         const match = linePrefix.match(/(?:if=|&|\|)([^&|]*)$/);
-        const currentExpr = match ? match[1] : '';
+        let currentExpr = match ? match[1] : '';
+
+        // Fallback for variables/movement_allowed context: scan backward for expression token
+        if (!match) {
+            let tokenStart = position.character;
+            while (tokenStart > 0 && /[a-zA-Z0-9._]/.test(linePrefix[tokenStart - 1])) {
+                tokenStart--;
+            }
+            currentExpr = linePrefix.substring(tokenStart, position.character);
+        }
 
         // Determine context from prefix
         const isNegated = currentExpr.startsWith('!');
         const exprWithoutNegation = isNegated ? currentExpr.slice(1) : currentExpr;
+
+        // Compute replacement range covering the full typed expression (including dots)
+        // This prevents double-insertion like target.target.moving
+        const replaceStart = position.character - exprWithoutNegation.length;
+        const replaceRange = new vscode.Range(position.line, replaceStart, position.line, position.character);
 
         // Add expressions based on what's typed
         for (const [key, info] of Object.entries(EXPRESSIONS)) {
@@ -138,6 +152,7 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
                 if (info.example) {
                     item.documentation.appendCodeblock(info.example, 'yaml');
                 }
+                item.range = replaceRange;
                 items.push(item);
             }
         }

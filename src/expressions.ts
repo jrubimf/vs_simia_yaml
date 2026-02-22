@@ -29,6 +29,8 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'runic_power.deficit': { type: 'resource', description: 'Runic power deficit' },
 
     'rune': { type: 'resource', description: 'Available rune count', example: 'if=rune>=3' },
+    'rune.max': { type: 'resource', description: 'Maximum rune count' },
+    'rune.deficit': { type: 'resource', description: 'Rune deficit (max - current)' },
 
     'focus': { type: 'resource', description: 'Current focus value', example: 'if=focus>=50' },
     'focus.max': { type: 'resource', description: 'Maximum focus' },
@@ -79,6 +81,11 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.time_to_die': { type: 'health', description: 'Estimated seconds until target dies', example: 'if=target.time_to_die>15' },
     'time_to_die': { type: 'health', description: 'Alias for target.time_to_die' },
     'fight_remains': { type: 'health', description: 'Estimated time remaining in fight' },
+    'boss1.time_to_die': { type: 'health', description: 'Estimated seconds until boss1 dies' },
+    'boss2.time_to_die': { type: 'health', description: 'Estimated seconds until boss2 dies' },
+    'boss3.time_to_die': { type: 'health', description: 'Estimated seconds until boss3 dies' },
+    'boss4.time_to_die': { type: 'health', description: 'Estimated seconds until boss4 dies' },
+    'boss5.time_to_die': { type: 'health', description: 'Estimated seconds until boss5 dies' },
     'range': { type: 'target', description: 'Alias for target.range (distance in yards)', example: 'if=range<8' },
 
     'focus.health.current': { type: 'health', description: 'Focus target current health value' },
@@ -269,8 +276,8 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.in_vehicle': { type: 'state', description: 'Player is in a vehicle' },
     'player.casting': { type: 'state', description: 'Player is casting', example: 'if=!player.casting' },
     'player.channeling': { type: 'state', description: 'Player is channeling' },
-    'player.casting.spell': { type: 'state', description: 'Currently casting spell ID' },
-    'player.casting.spell(SPELL)': { type: 'state', description: 'Check if casting specific spell (function syntax)', example: 'if=player.casting.spell(fireball)' },
+    'player.casting.spell_id': { type: 'state', description: 'Currently casting spell ID' },
+    'player.casting.spell_id(SPELL)': { type: 'state', description: 'Check if casting specific spell (function syntax)', example: 'if=player.casting.spell_id(fireball)' },
     'player.casting.SPELL_NAME': { type: 'state', description: 'Casting specific spell (1 if true)', example: 'if=player.casting.fireball' },
     'player.casting.remains': { type: 'state', description: 'Time remaining on cast' },
     'player.casting.elapsed': { type: 'state', description: 'Time spent casting' },
@@ -281,6 +288,13 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.burst.count': { type: 'state', description: 'Number of active burst buffs' },
     'player.auto_attacking': { type: 'state', description: 'Player is auto-attacking', example: 'if=player.auto_attacking' },
     'player.loot_nearby': { type: 'state', description: 'Lootable unit nearby', example: 'if=player.loot_nearby' },
+    'player.power': { type: 'resource', description: 'Current primary resource (generic, auto-detected from spec)', example: 'if=player.power>=80' },
+    'player.power.max': { type: 'resource', description: 'Maximum primary resource' },
+    'player.power.deficit': { type: 'resource', description: 'Primary resource deficit' },
+    'player.time_to_die': { type: 'health', description: 'Estimated seconds until player dies', example: 'if=player.time_to_die<5' },
+    'player.guid': { type: 'state', description: 'Player has a GUID (always true in-game)' },
+    'auto_combat': { type: 'state', description: 'Auto-combat config conditions are met', example: 'if=auto_combat&!player.combat' },
+    'player.auto_combat': { type: 'state', description: 'Alias for auto_combat' },
 
     // Short aliases (without player. prefix)
     'dead': { type: 'state', description: 'Alias for player.dead' },
@@ -294,7 +308,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'channeling': { type: 'state', description: 'Alias for player.channeling' },
     'casting.remains': { type: 'state', description: 'Alias for player.casting.remains' },
     'casting.elapsed': { type: 'state', description: 'Alias for player.casting.elapsed' },
-    'casting.spell': { type: 'state', description: 'Alias for player.casting.spell' },
+    'casting.spell_id': { type: 'state', description: 'Alias for player.casting.spell_id' },
     'combat': { type: 'state', description: 'Alias for player.combat' },
     'combat.time': { type: 'state', description: 'Alias for player.combat.time' },
     'empower_stage': { type: 'state', description: 'Alias for player.empower_stage (Evoker)' },
@@ -403,7 +417,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.moving': { type: 'target', description: 'Target is moving' },
     'target.casting': { type: 'target', description: 'Target is casting' },
     'target.channeling': { type: 'target', description: 'Target is channeling' },
-    'target.casting.spell': { type: 'target', description: 'Target casting spell ID' },
+    'target.casting.spell_id': { type: 'target', description: 'Target casting spell ID' },
     'target.casting.remains': { type: 'target', description: 'Target cast time remaining' },
     'target.casting.elapsed': { type: 'target', description: 'Target cast time elapsed' },
     'target.casting.interruptible': { type: 'target', description: 'Target cast can be interrupted', example: 'if=target.casting.interruptible' },
@@ -435,12 +449,6 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.purgeable.magic': { type: 'target', description: 'Target has magic buff' },
     'target.purgeable.enrage': { type: 'target', description: 'Target has enrage buff' },
     'target.los': { type: 'target', description: 'Target is in line of sight (C++ managed, resets after 2s)' },
-    'target.stunned': { type: 'target', description: 'Target is stunned' },
-    'target.rooted': { type: 'target', description: 'Target is rooted' },
-    'target.silenced': { type: 'target', description: 'Target is silenced' },
-    'target.slowed': { type: 'target', description: 'Target is slowed' },
-    'target.interrupt_immune': { type: 'target', description: 'Target is immune to interrupts' },
-    'target.stun_immune': { type: 'target', description: 'Target is immune to stuns' },
 
     // Focus
     'focus.exists': { type: 'unit', description: 'Focus target exists' },
@@ -458,7 +466,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'focus.casting.elapsed': { type: 'unit', description: 'Focus cast time elapsed' },
     'focus.casting.important': { type: 'unit', description: 'Focus cast is in _interrupts.yaml' },
     'focus.casting.targeting_me': { type: 'unit', description: 'Focus cast is targeting player' },
-    'focus.casting.spell': { type: 'unit', description: 'Focus currently casting spell ID' },
+    'focus.casting.spell_id': { type: 'unit', description: 'Focus currently casting spell ID' },
     'focus.casting.SPELL_NAME': { type: 'unit', description: 'Focus is casting specific spell by name', example: 'if=focus.casting.shadow_bolt' },
     // Focus buff/debuff property syntax
     'focus.buff.SPELL.up': { type: 'unit', description: 'Focus has buff' },
@@ -520,7 +528,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'mouseover.casting.elapsed': { type: 'unit', description: 'Mouseover cast time elapsed' },
     'mouseover.casting.important': { type: 'unit', description: 'Mouseover cast is in _interrupts.yaml' },
     'mouseover.casting.targeting_me': { type: 'unit', description: 'Mouseover cast is targeting player' },
-    'mouseover.casting.spell': { type: 'unit', description: 'Mouseover currently casting spell ID' },
+    'mouseover.casting.spell_id': { type: 'unit', description: 'Mouseover currently casting spell ID' },
     'mouseover.casting.SPELL_NAME': { type: 'unit', description: 'Mouseover is casting specific spell by name', example: 'if=mouseover.casting.fear' },
     // Mouseover purgeable expressions (offensive dispels)
     'mouseover.purgeable': { type: 'unit', description: 'Mouseover has purgeable buff (auto-detect types from spec)' },
@@ -570,6 +578,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'pet.dead': { type: 'pet', description: 'Pet is dead' },
     'pet.guid': { type: 'pet', description: 'Pet has a GUID (for existence checks)' },
     'pet.health.max': { type: 'pet', description: 'Pet maximum health' },
+    'pet.npcid': { type: 'pet', description: 'NPC ID from pet GUID' },
     'pet.nearby_enemies': { type: 'pet', description: 'Enemies within 8 yards of pet' },
     'pet.nearbyenemies': { type: 'pet', description: 'Alias for pet.nearby_enemies' },
 
@@ -586,6 +595,14 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'pet.debuff.remains(SPELL)': { type: 'pet', description: 'Pet debuff remaining duration (function syntax)' },
     'pet.debuff.stacks(SPELL)': { type: 'pet', description: 'Pet debuff stack count (function syntax)' },
     'pet.debuff.up(SPELL)': { type: 'pet', description: 'Pet has debuff (function syntax)' },
+
+    // Softinteract (soft-targeting system)
+    'softinteract.exists': { type: 'unit', description: 'Soft interact target exists (has GUID)' },
+    'softinteract.dead': { type: 'unit', description: 'Soft interact target is dead' },
+    'softinteract.lootable': { type: 'unit', description: 'Soft interact target is lootable' },
+    'softinteract.guid': { type: 'unit', description: 'Soft interact target has a GUID' },
+    'softinteract.health.pct': { type: 'unit', description: 'Soft interact target health percentage' },
+    'softinteract.npcid': { type: 'unit', description: 'NPC ID from soft interact target GUID' },
 
     // Enemy counts
     'active_enemies': { type: 'combat', description: 'Enemies in combat range', example: 'if=active_enemies>=3' },
@@ -611,12 +628,6 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'group.tanks.lowest.health.pct': { type: 'group', description: 'Lowest tank health %' },
     'group.healers.lowest.health.pct': { type: 'group', description: 'Lowest healer health %' },
     'group.dps.lowest.health.pct': { type: 'group', description: 'Lowest DPS health %' },
-    'group.under_pct_30': { type: 'group', description: 'Members under 30% health' },
-    'group.under_pct_50': { type: 'group', description: 'Members under 50% health' },
-    'group.under_pct_75': { type: 'group', description: 'Members under 75% health' },
-    'group.under_pct_80': { type: 'group', description: 'Members under 80% health' },
-    'group.under_pct_85': { type: 'group', description: 'Members under 85% health' },
-    'group.under_pct_90': { type: 'group', description: 'Members under 90% health' },
     'group.lowest.health.current': { type: 'group', description: 'Lowest member current HP' },
     'group.lowest.health.deficit': { type: 'group', description: 'Lowest member missing HP' },
     'group.lowest.dead': { type: 'group', description: 'Lowest member is dead' },
@@ -651,9 +662,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'cycle.health.pct': { type: 'cycle', description: 'Current cycle member health %' },
     'cycle.health.deficit': { type: 'cycle', description: 'Current cycle member missing HP' },
     'cycle.range': { type: 'cycle', description: 'Range to current cycle member' },
-    'cycle.dead': { type: 'cycle', description: 'Current cycle member is dead' },
-    'cycle.alive': { type: 'cycle', description: 'Current cycle member is alive' },
-    'cycle.guid': { type: 'cycle', description: 'Current cycle member has a GUID' },
+    'cycle.time_to_die': { type: 'cycle', description: 'Estimated seconds until cycle member dies' },
     'cycle.buff.SPELL.up': { type: 'cycle', description: 'Cycle member has your buff' },
     'cycle.buff.SPELL.up.any': { type: 'cycle', description: 'Cycle member has buff from any source' },
     'cycle.buff.SPELL.down': { type: 'cycle', description: 'Cycle member missing your buff' },
@@ -752,6 +761,10 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'rune.cd': { type: 'consumable', description: 'Augment rune cooldown' },
 
     // Interrupts (from _interrupts.yaml)
+    'interrupts.5y.ready': { type: 'interrupt', description: 'Any enemy in 5y casting interruptible' },
+    'interrupts.5y.stun.ready': { type: 'interrupt', description: 'Any enemy in 5y casting stun-able' },
+    'interrupts.5y.count': { type: 'interrupt', description: 'Count of enemies in 5y casting interruptible' },
+    'interrupts.5y.stun.count': { type: 'interrupt', description: 'Count of enemies in 5y casting stun-able' },
     'interrupts.target.ready': { type: 'interrupt', description: 'Target casting interruptible spell' },
     'interrupts.target.stun.ready': { type: 'interrupt', description: 'Target casting stun-able spell' },
     'interrupts.focus.ready': { type: 'interrupt', description: 'Focus casting interruptible spell' },

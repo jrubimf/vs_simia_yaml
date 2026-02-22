@@ -152,7 +152,7 @@
           }
         },
         {
-          "match": "\\b(player|target|focus|mouseover|pet)\\.(health|casting|channeling|moving|standing|combat|burst|stunned|rooted|feared|silenced|cc|alive|dead|exists|enemy|friendly|boss|range|valid)(\\.\\w+)?",
+          "match": "\\b(player|target|focus|mouseover|pet|softinteract)\\.(health|casting|channeling|moving|standing|combat|burst|stunned|rooted|feared|silenced|cc|alive|dead|exists|enemy|friendly|boss|range|valid|lootable|npcid)(\\.\\w+)?",
           "captures": {
             "1": { "name": "support.class.unit.rotation-yaml" },
             "2": { "name": "support.function.property.rotation-yaml" },
@@ -160,7 +160,7 @@
           }
         },
         {
-          "match": "\\b(player|target|focus|mouseover|pet|group|nameplates|enemies|combat)\\.(\\w+)",
+          "match": "\\b(player|target|focus|mouseover|pet|softinteract|group|nameplates|enemies|combat)\\.(\\w+)",
           "captures": {
             "1": { "name": "support.class.unit.rotation-yaml" },
             "2": { "name": "support.function.property.rotation-yaml" }
@@ -174,11 +174,17 @@
           }
         },
         {
-          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead|alive|moving|standing|casting|channeling|combat|mounted|stunned|rooted|silenced|boss_fight|empower_stage|haste_pct|crit_pct|versa_pct|mastery_pct|haste|crit|versatility|mastery)\\b",
+          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead|alive|moving|standing|casting|channeling|combat|mounted|stunned|rooted|silenced|boss_fight|empower_stage|haste_pct|crit_pct|versa_pct|mastery_pct|haste|crit|versatility|mastery|auto_combat)\\b",
           "name": "variable.other.combat.rotation-yaml"
         },
         {
-          "match": "\\bcycle\\.(health|range|buff|debuff|dispelable)(\\.\\w+)*",
+          "match": "\\bboss[1-5]\\.time_to_die\\b",
+          "captures": {
+            "0": { "name": "variable.other.combat.rotation-yaml" }
+          }
+        },
+        {
+          "match": "\\bcycle\\.(health|range|buff|debuff|dispelable|time_to_die)(\\.\\w+)*",
           "captures": {
             "0": { "name": "support.class.cycle.rotation-yaml" }
           }
