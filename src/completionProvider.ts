@@ -18,7 +18,9 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
 
         // Check context
         const inIfCondition = /,if=/.test(linePrefix) || /if:\s*/.test(linePrefix);
-        const inVariables = this.isInSection(document, position, 'variables:');
+        const inVariables = this.isInSection(document, position, 'variables:') ||
+                              this.isInSection(document, position, 'variable:') ||
+                              this.isInSection(document, position, 'var:');
         const inMovementAllowed = linePrefix.includes('movement_allowed:');
 
         // After if= or in variables section, provide expression completions
@@ -408,6 +410,7 @@ export class RotationCompletionProvider implements vscode.CompletionItemProvider
             { name: 'max_charges', desc: 'Maximum charges' },
             { name: 'full_recharge_time', desc: 'Time until all charges restored' },
             { name: 'charges_fractional', desc: 'Charges including partial progress' },
+            { name: 'duration', desc: 'Cooldown duration in seconds (per-charge for charge-based spells)' },
         ];
 
         return properties.map(p => {

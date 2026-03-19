@@ -41,7 +41,7 @@
     "root-keys": {
       "patterns": [
         {
-          "match": "^(movement_allowed|variables|config|lists|actions|tier_sets|config_shared|morphs|entry):",
+          "match": "^(movement_allowed|variables|variable|var|config|lists|actions|tier_sets|config_shared|morphs|entry|version):",
           "captures": {
             "1": { "name": "keyword.control.rotation-yaml" }
           }
@@ -80,8 +80,8 @@
           }
         },
         {
-          "comment": "Numeric step options: hotkey=49, delay=100",
-          "match": "(hotkey|modifier|delay|global_delay|cast_remains|channel_remains)=(\\d+\\.?\\d*)",
+          "comment": "Numeric step options: hotkey=49, delay=100, line_cd=1, chain=1, use_off_gcd=1",
+          "match": "(hotkey|modifier|delay|global_delay|cast_remains|channel_remains|line_cd|chain|use_off_gcd|use_while_casting|empower_to|empowerto|sec)=(\\d+\\.?\\d*)",
           "captures": {
             "1": { "name": "keyword.operator.option.rotation-yaml" },
             "2": { "name": "constant.numeric.rotation-yaml" }
@@ -174,7 +174,7 @@
           }
         },
         {
-          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|gcd|range|dead|alive|moving|standing|casting|channeling|combat|mounted|stunned|rooted|silenced|boss_fight|empower_stage|haste_pct|crit_pct|versa_pct|mastery_pct|haste|crit|versatility|mastery|auto_combat)\\b",
+          "match": "\\b(active_enemies|spell_targets|time_to_die|fight_remains|execute_time|cast_time|gcd|range|dead|alive|moving|standing|casting|channeling|combat|mounted|stunned|rooted|silenced|boss_fight|empower_stage|haste_pct|crit_pct|versa_pct|mastery_pct|haste|crit|versatility|mastery|auto_combat)\\b",
           "name": "variable.other.combat.rotation-yaml"
         },
         {
@@ -202,7 +202,7 @@
           }
         },
         {
-          "match": "\\b(var|config|settings|state)\\.(\\w+)",
+          "match": "\\b(var|variable|config|settings|state)\\.(\\w+)",
           "captures": {
             "1": { "name": "support.class.rotation-yaml" },
             "2": { "name": "variable.other.user.rotation-yaml" }
@@ -216,15 +216,15 @@
           }
         },
         {
-          "match": "\\b(interrupts|defensives|reflectable)\\.(\\w+)(\\.\\w+)?",
+          "match": "\\b((?:target|focus|mouseover)\\.)?\\b(incoming_cast|buff_list|debuff_list)((?:\\.\\w+)+)",
           "captures": {
             "1": { "name": "support.class.yaml-ref.rotation-yaml" },
-            "2": { "name": "support.function.property.rotation-yaml" },
+            "2": { "name": "support.class.yaml-ref.rotation-yaml" },
             "3": { "name": "support.function.property.rotation-yaml" }
           }
         },
         {
-          "match": "\\b(call_action_list|run_action_list|return|stop_casting|queue_spell|target_enemy|target_focus|target_mouseover|attack_target|interact_target|interact_mouseover|focus_target|focus_mouseover|focus_party[1-4]|focus_raid[1-9]|focus_raid[1-3][0-9]|focus_raid40)\\b",
+          "match": "\\b(call_action_list|run_action_list|return|variable|wait|stop_casting|queue_spell|target_enemy|target_focus|target_mouseover|attack_target|interact_target|interact_mouseover|focus_target|focus_mouseover|focus_party[1-4]|focus_raid[1-9]|focus_raid[1-3][0-9]|focus_raid40)\\b",
           "name": "keyword.control.action.rotation-yaml"
         },
         {

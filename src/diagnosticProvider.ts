@@ -117,9 +117,9 @@ export class RotationDiagnosticProvider {
     }
 
     /**
-     * Collect all variable names defined under 'variables:' section
+     * Collect all variable names defined under 'variables:', 'variable:', or 'var:' sections
      * Variables format:
-     *   variables:
+     *   variable:
      *     var_name: expression
      */
     private collectDefinedVariables(document: vscode.TextDocument): Set<string> {
@@ -129,8 +129,8 @@ export class RotationDiagnosticProvider {
         for (let lineNum = 0; lineNum < document.lineCount; lineNum++) {
             const text = document.lineAt(lineNum).text;
 
-            // Check if we're entering the variables: section
-            if (/^variables:\s*$/.test(text)) {
+            // Check if we're entering a variables section (variables:, variable:, or var:)
+            if (/^(variables|variable|var):\s*$/.test(text)) {
                 inVariablesSection = true;
                 continue;
             }
@@ -147,6 +147,12 @@ export class RotationDiagnosticProvider {
                 if (varMatch) {
                     variables.add(varMatch[1]);
                 }
+            }
+
+            // Also collect variable names from action lines: variable,name=X or var,name=X
+            const actionVarMatch = text.match(/^\s*-\s*(?:variable|var),name=(\w+)/);
+            if (actionVarMatch) {
+                variables.add(actionVarMatch[1]);
             }
         }
 
@@ -198,12 +204,13 @@ export class RotationDiagnosticProvider {
             }
         }
 
-        // Check var.xxx references
-        const varPattern = /\bvar\.(\w+)/g;
+        // Check var.xxx and variable.xxx references
+        const varPattern = /\b(var|variable)\.(\w+)/g;
         while ((match = varPattern.exec(text)) !== null) {
-            const varName = match[1];
+            const prefix = match[1];
+            const varName = match[2];
             if (!definedVariables.has(varName)) {
-                const startIndex = match.index + 4; // 4 = 'var.'.length
+                const startIndex = match.index + prefix.length + 1; // prefix + '.'
                 const availableVars = Array.from(definedVariables);
                 let message = `Variable "${varName}" is not defined`;
                 if (availableVars.length > 0) {

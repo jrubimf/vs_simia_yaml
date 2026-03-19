@@ -187,6 +187,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'cooldown.SPELL.max_charges': { type: 'cooldown', description: 'Maximum charges' },
     'cooldown.SPELL.full_recharge_time': { type: 'cooldown', description: 'Time until all charges restored' },
     'cooldown.SPELL.charges_fractional': { type: 'cooldown', description: 'Charges including partial progress' },
+    'cooldown.SPELL.duration': { type: 'cooldown', description: 'Cooldown duration in seconds (per-charge for charge-based spells)', example: 'if=cooldown.combustion.duration>60' },
 
     // Usable/Range
     'usable.SPELL': { type: 'spell', description: 'Spell is usable (resources + off CD)', example: 'if=usable.expensive_ability' },
@@ -204,6 +205,8 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'action.SPELL.charges': { type: 'action', description: 'Action charges' },
     'action.SPELL.cast_time': { type: 'action', description: 'Cast time in seconds' },
     'action.SPELL.execute_time': { type: 'action', description: 'Max of cast_time and GCD' },
+    'execute_time': { type: 'action', description: 'Bare execute_time: max(cast_time, gcd) of the current action. Resolved to action.SPELL.execute_time at compile time.', example: 'if=fight_remains<execute_time' },
+    'cast_time': { type: 'action', description: 'Bare cast_time: cast time of the current action. Resolved to action.SPELL.cast_time at compile time.', example: 'if=cast_time<buff.combustion.remains' },
 
     // GCD
     'gcd': { type: 'gcd', description: 'Current GCD duration', example: 'if=gcd<1.2' },
@@ -273,6 +276,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'player.standing': { type: 'state', description: 'Player is standing still' },
     'player.standing.time': { type: 'state', description: 'Seconds standing still' },
     'player.mounted': { type: 'state', description: 'Player is mounted' },
+    'player.mount_usable': { type: 'state', description: 'Can mount here — false indoors/no-mount zones' },
     'player.in_vehicle': { type: 'state', description: 'Player is in a vehicle' },
     'player.casting': { type: 'state', description: 'Player is casting', example: 'if=!player.casting' },
     'player.channeling': { type: 'state', description: 'Player is channeling' },
@@ -304,6 +308,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'standing': { type: 'state', description: 'Alias for player.standing' },
     'standing.time': { type: 'state', description: 'Alias for player.standing.time' },
     'mounted': { type: 'state', description: 'Alias for player.mounted' },
+    'mount_usable': { type: 'state', description: 'Alias for player.mount_usable' },
     'casting': { type: 'state', description: 'Alias for player.casting', example: 'if=!casting' },
     'channeling': { type: 'state', description: 'Alias for player.channeling' },
     'casting.remains': { type: 'state', description: 'Alias for player.casting.remains' },
@@ -424,7 +429,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'target.casting.remains': { type: 'target', description: 'Target cast time remaining' },
     'target.casting.elapsed': { type: 'target', description: 'Target cast time elapsed' },
     'target.casting.interruptible': { type: 'target', description: 'Target cast can be interrupted', example: 'if=target.casting.interruptible' },
-    'target.casting.important': { type: 'target', description: 'Target cast is in _interrupts.yaml' },
+    'target.casting.important': { type: 'target', description: 'Target cast is in _casts.yaml' },
     'target.casting.targeting_me': { type: 'target', description: 'Target cast is targeting player' },
     'target.casting.SPELL_NAME': { type: 'target', description: 'Target is casting specific spell by name', example: 'if=target.casting.shadow_bolt' },
     'target.valid': { type: 'target', description: 'Comprehensive target check (exists, enemy, alive, combat)' },
@@ -467,7 +472,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'focus.casting.interruptible': { type: 'unit', description: 'Focus cast can be interrupted' },
     'focus.casting.remains': { type: 'unit', description: 'Focus cast time remaining' },
     'focus.casting.elapsed': { type: 'unit', description: 'Focus cast time elapsed' },
-    'focus.casting.important': { type: 'unit', description: 'Focus cast is in _interrupts.yaml' },
+    'focus.casting.important': { type: 'unit', description: 'Focus cast is in _casts.yaml' },
     'focus.casting.targeting_me': { type: 'unit', description: 'Focus cast is targeting player' },
     'focus.casting.spell_id': { type: 'unit', description: 'Focus currently casting spell ID' },
     'focus.casting.SPELL_NAME': { type: 'unit', description: 'Focus is casting specific spell by name', example: 'if=focus.casting.shadow_bolt' },
@@ -532,7 +537,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'mouseover.casting.interruptible': { type: 'unit', description: 'Mouseover cast can be interrupted' },
     'mouseover.casting.remains': { type: 'unit', description: 'Mouseover cast time remaining' },
     'mouseover.casting.elapsed': { type: 'unit', description: 'Mouseover cast time elapsed' },
-    'mouseover.casting.important': { type: 'unit', description: 'Mouseover cast is in _interrupts.yaml' },
+    'mouseover.casting.important': { type: 'unit', description: 'Mouseover cast is in _casts.yaml' },
     'mouseover.casting.targeting_me': { type: 'unit', description: 'Mouseover cast is targeting player' },
     'mouseover.casting.spell_id': { type: 'unit', description: 'Mouseover currently casting spell ID' },
     'mouseover.casting.SPELL_NAME': { type: 'unit', description: 'Mouseover is casting specific spell by name', example: 'if=mouseover.casting.fear' },
@@ -772,40 +777,56 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
     'rune.ready': { type: 'consumable', description: 'Augment rune is ready' },
     'rune.cd': { type: 'consumable', description: 'Augment rune cooldown' },
 
-    // Interrupts (from _interrupts.yaml)
-    'interrupts.5y.ready': { type: 'interrupt', description: 'Any enemy in 5y casting interruptible' },
-    'interrupts.5y.stun.ready': { type: 'interrupt', description: 'Any enemy in 5y casting stun-able' },
-    'interrupts.5y.count': { type: 'interrupt', description: 'Count of enemies in 5y casting interruptible' },
-    'interrupts.5y.stun.count': { type: 'interrupt', description: 'Count of enemies in 5y casting stun-able' },
-    'interrupts.target.ready': { type: 'interrupt', description: 'Target casting interruptible spell' },
-    'interrupts.target.stun.ready': { type: 'interrupt', description: 'Target casting stun-able spell' },
-    'interrupts.focus.ready': { type: 'interrupt', description: 'Focus casting interruptible spell' },
-    'interrupts.focus.stun.ready': { type: 'interrupt', description: 'Focus casting stun-able spell' },
-    'interrupts.mouseover.ready': { type: 'interrupt', description: 'Mouseover casting interruptible spell' },
-    'interrupts.mouseover.stun.ready': { type: 'interrupt', description: 'Mouseover casting stun-able spell' },
-    'interrupts.8y.ready': { type: 'interrupt', description: 'Any enemy in 8y casting interruptible' },
-    'interrupts.8y.stun.ready': { type: 'interrupt', description: 'Any enemy in 8y casting stun-able' },
-    'interrupts.8y.count': { type: 'interrupt', description: 'Count of enemies in 8y casting interruptible' },
-    'interrupts.8y.stun.count': { type: 'interrupt', description: 'Count of enemies in 8y casting stun-able' },
-    'interrupts.10y.ready': { type: 'interrupt', description: 'Any enemy in 10y casting interruptible' },
-    'interrupts.10y.stun.ready': { type: 'interrupt', description: 'Any enemy in 10y casting stun-able' },
-    'interrupts.10y.count': { type: 'interrupt', description: 'Count of enemies in 10y casting interruptible' },
-    'interrupts.10y.stun.count': { type: 'interrupt', description: 'Count of enemies in 10y casting stun-able' },
-    'interrupts.15y.ready': { type: 'interrupt', description: 'Any enemy in 15y casting interruptible' },
-    'interrupts.15y.stun.ready': { type: 'interrupt', description: 'Any enemy in 15y casting stun-able' },
-    'interrupts.15y.count': { type: 'interrupt', description: 'Count of enemies in 15y casting interruptible' },
-    'interrupts.15y.stun.count': { type: 'interrupt', description: 'Count of enemies in 15y casting stun-able' },
-    'interrupts.40y.ready': { type: 'interrupt', description: 'Any enemy in 40y casting interruptible' },
-    'interrupts.40y.stun.ready': { type: 'interrupt', description: 'Any enemy in 40y casting stun-able' },
-    'interrupts.40y.count': { type: 'interrupt', description: 'Count of enemies in 40y casting interruptible' },
-    'interrupts.40y.stun.count': { type: 'interrupt', description: 'Count of enemies in 40y casting stun-able' },
+    // Incoming casts (from _casts.yaml — scans nameplates)
+    // Syntax: [unit.]incoming_cast.[filter.]<tags>.<property>
+    // Unit prefix: target., focus., mouseover. (which enemy to check)
+    // Filter: player, cycle, 5y, 8y, 10y, 15y, 40y
+    'target.incoming_cast.<tags>.up': { type: 'cast', description: 'Target is casting a spell matching all tags', example: 'if=target.incoming_cast.kickable.up' },
+    'target.incoming_cast.<tags>.ready': { type: 'cast', description: 'Target has a matching cast (alias for .up)', example: 'if=target.incoming_cast.kickable.ready' },
+    'target.incoming_cast.<tags>.down': { type: 'cast', description: 'Target is NOT casting a matching spell', example: 'if=target.incoming_cast.kickable.down' },
+    'target.incoming_cast.<tags>.remains': { type: 'cast', description: 'Seconds until target\'s matching cast finishes', example: 'if=target.incoming_cast.kickable.remains>0.5' },
+    'target.incoming_cast.player.<tags>.up': { type: 'cast', description: 'Target is casting a matching spell at the player', example: 'if=target.incoming_cast.player.kickable.up' },
+    'focus.incoming_cast.<tags>.up': { type: 'cast', description: 'Focus is casting a spell matching all tags', example: 'if=focus.incoming_cast.kickable.up' },
+    'focus.incoming_cast.<tags>.ready': { type: 'cast', description: 'Focus has a matching cast', example: 'if=focus.incoming_cast.kickable.ready' },
+    'mouseover.incoming_cast.<tags>.up': { type: 'cast', description: 'Mouseover is casting a spell matching all tags', example: 'if=mouseover.incoming_cast.stunnable.up' },
+    // Range filter (no unit prefix, scans all nameplates within range)
+    'incoming_cast.Xy.<tags>.up': { type: 'cast', description: 'Any enemy within X yards casting a matching spell (5y, 8y, 10y, 15y, 40y)', example: 'if=incoming_cast.10y.kickable.up' },
+    'incoming_cast.Xy.<tags>.count': { type: 'cast', description: 'Count of enemies within X yards casting matching spells', example: 'if=incoming_cast.10y.kickable.count' },
+    'incoming_cast.Xy.<tags>.remains': { type: 'cast', description: 'Min remaining seconds of matching casts within X yards', example: 'if=incoming_cast.8y.stunnable.remains' },
+    // No unit/filter (scan all nameplates within 40y)
+    'incoming_cast.up': { type: 'cast', description: 'Any enemy casting a listed spell from _casts.yaml', example: 'if=incoming_cast.up' },
+    'incoming_cast.down': { type: 'cast', description: 'No enemy casting a listed spell', example: 'if=incoming_cast.down' },
+    'incoming_cast.remains': { type: 'cast', description: 'Seconds until soonest incoming cast lands (min)', example: 'if=incoming_cast.remains>0.5' },
+    'incoming_cast.<tags>.up': { type: 'cast', description: 'Any enemy casting a spell matching all tags', example: 'if=incoming_cast.aoe.up' },
+    'incoming_cast.<tags>.remains': { type: 'cast', description: 'Seconds until soonest tag-filtered incoming cast lands', example: 'if=incoming_cast.magic.remains' },
+    'incoming_cast.<tags>.count': { type: 'cast', description: 'Count of enemies casting matching spells (40y)', example: 'if=incoming_cast.kickable.count>=2' },
+    // Target filter (who the cast is aimed at)
+    'incoming_cast.player.<tags>.up': { type: 'cast', description: 'Any enemy casting a matching spell targeting the player', example: 'if=incoming_cast.player.magic.up' },
+    'incoming_cast.player.<tags>.remains': { type: 'cast', description: 'Min remaining seconds of matching casts targeting player', example: 'if=incoming_cast.player.reflectable.remains<0.5' },
+    'incoming_cast.cycle.<tags>.up': { type: 'cast', description: 'Enemy casting a matching spell targeting the cycle member', example: 'if=incoming_cast.cycle.magic.up' },
+    'incoming_cast.cycle.<tags>.remains': { type: 'cast', description: 'Min remaining seconds of matching casts targeting cycle member', example: 'if=incoming_cast.cycle.magic.remains' },
 
-    // Defensives (from _defensives.yaml)
-    'defensives.ready': { type: 'defensive', description: 'Enemy casting dangerous spell' },
-    'defensives.ready.aoe': { type: 'defensive', description: 'Enemy casting AoE spell' },
+    // Buff list (from _aura.yaml buffs — scans unit buffs)
+    'buff_list.up': { type: 'aura', description: 'Player has any tracked buff active (from _aura.yaml)', example: 'if=buff_list.up' },
+    'buff_list.down': { type: 'aura', description: 'Player has no tracked buffs active', example: 'if=buff_list.down' },
+    'buff_list.remains': { type: 'aura', description: 'Max remaining seconds of any tracked buff on player', example: 'if=buff_list.remains>3' },
+    'buff_list.count': { type: 'aura', description: 'Count of active tracked buffs on player', example: 'if=buff_list.count>=2' },
+    'buff_list.<tag>.up': { type: 'aura', description: 'Player has a tracked buff with the given tag (immunity, major, magic, etc.)', example: 'if=buff_list.immunity.up' },
+    'buff_list.<tag>.down': { type: 'aura', description: 'Player has no tracked buff with the given tag', example: 'if=buff_list.magic.down' },
+    'buff_list.<tag>.remains': { type: 'aura', description: 'Max remaining seconds of tag-filtered tracked buffs', example: 'if=buff_list.major.remains>5' },
+    'buff_list.<tag>.count': { type: 'aura', description: 'Count of tag-filtered active tracked buffs', example: 'if=buff_list.magic.count' },
+    'target.buff_list.up': { type: 'aura', description: 'Target has any tracked buff active', example: 'if=target.buff_list.up' },
+    'target.buff_list.<tag>.up': { type: 'aura', description: 'Target has a tracked buff with the given tag', example: 'if=target.buff_list.immunity.up' },
 
-    // Reflectable (from _reflectable.yaml)
-    'reflectable.ready': { type: 'reflect', description: 'Enemy casting reflectable spell' },
+    // Debuff list (from _aura.yaml debuffs — scans unit debuffs)
+    'debuff_list.up': { type: 'aura', description: 'Player has any tracked debuff active (from _aura.yaml)', example: 'if=debuff_list.up' },
+    'debuff_list.down': { type: 'aura', description: 'Player has no tracked debuffs active', example: 'if=debuff_list.down' },
+    'debuff_list.remains': { type: 'aura', description: 'Max remaining seconds of any tracked debuff on player', example: 'if=debuff_list.remains>5' },
+    'debuff_list.count': { type: 'aura', description: 'Count of active tracked debuffs on player', example: 'if=debuff_list.count>=2' },
+    'debuff_list.<tag>.up': { type: 'aura', description: 'Player has a tracked debuff with the given tag (physical, magic, dot, etc.)', example: 'if=debuff_list.physical.up' },
+    'debuff_list.<tag>.down': { type: 'aura', description: 'Player has no tracked debuff with the given tag', example: 'if=debuff_list.magic.down' },
+    'debuff_list.<tag>.remains': { type: 'aura', description: 'Max remaining seconds of tag-filtered tracked debuffs', example: 'if=debuff_list.dot.remains>5' },
+    'debuff_list.<tag>.count': { type: 'aura', description: 'Count of tag-filtered active tracked debuffs', example: 'if=debuff_list.bleed.count' },
 
     // System state
     'state.rotation': { type: 'state', description: 'Rotation enabled/disabled' },
@@ -815,6 +836,7 @@ export const EXPRESSIONS: Record<string, ExpressionInfo> = {
 
     // Variables and config
     'var.VARNAME': { type: 'variable', description: 'User-defined variable value', example: 'if=var.pooling' },
+    'variable.VARNAME': { type: 'variable', description: 'Alias for var.VARNAME — user-defined variable value', example: 'if=variable.pooling' },
 
     // User config options (SECTION 25)
     // Config values from rotation-specific config: section or shared config_shared: section
@@ -936,6 +958,11 @@ export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
         values: ['true', 'false'],
         snippet: 'ignore_movement=true'
     },
+    'ignore_queue': {
+        description: 'Skip isCurrentSpell guard, allowing re-pressing to queue same spell. Use with interrupt for filler spam.',
+        values: ['true', 'false'],
+        snippet: 'ignore_queue=true'
+    },
     'hotkey': {
         description: 'Override the virtual key code for this action',
         snippet: 'hotkey=${1:49}'
@@ -948,6 +975,10 @@ export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
     'override': {
         description: 'Use another spell\'s keybind',
         snippet: 'override=${1:spell_name}'
+    },
+    'after': {
+        description: 'Wait N milliseconds after condition becomes true before executing. Timer resets if condition goes false.',
+        snippet: 'after=${1:50}'
     },
     'delay': {
         description: 'Minimum ms between presses for this spell',
@@ -974,6 +1005,33 @@ export const STEP_OPTIONS: Record<string, StepOptionInfo> = {
     'call': {
         description: 'Alias for call_action_list (name required)',
         snippet: 'call=${1:list_name}'
+    },
+    'line_cd': {
+        description: 'Per-line cooldown in seconds — prevents re-evaluation for this duration after activation',
+        snippet: 'line_cd=${1:1}'
+    },
+    'chain': {
+        description: 'SimC chain option for channels — indicates channel should be immediately re-cast',
+        values: ['1'],
+        snippet: 'chain=1'
+    },
+    'use_off_gcd': {
+        description: 'SimC off-GCD option — spell can be used during the global cooldown',
+        values: ['1'],
+        snippet: 'use_off_gcd=1'
+    },
+    'use_while_casting': {
+        description: 'SimC use-while-casting option — spell can be used during another cast',
+        values: ['1'],
+        snippet: 'use_while_casting=1'
+    },
+    'empower_to': {
+        description: 'Auto-handle empowered spell: press to start empowering, press again at stage N to fire. Replaces manual casting_check+ignore_usable+ignore_cooldown+empower_stage workaround.',
+        snippet: 'empower_to=${1:1}'
+    },
+    'empowerto': {
+        description: 'SimC compatibility alias for empower_to.',
+        snippet: 'empowerto=${1:1}'
     }
 };
 
@@ -998,6 +1056,9 @@ export const SPECIAL_ACTIONS: Record<string, string> = {
     'interact_target': 'Interact with target (loot, talk)',
     'interact_mouseover': 'Interact with mouseover unit',
     'loot_a_rang': 'Use Loot-A-Rang',
+    'variable': 'Set/modify a rotation variable (variable,name=X,op=set,value=Y)',
+    'var': 'Alias for variable — set/modify a rotation variable (var,name=X,op=set,value=Y)',
+    'wait': 'Suppress suggestions when condition is true (wait,sec=X,if=CONDITION)',
     'return': 'Stop rotation evaluation',
     'stop_casting': 'Cancel current cast',
     'queue_spell': 'Cast spell from Lua addon queue',

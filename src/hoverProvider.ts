@@ -568,6 +568,76 @@ export class RotationHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(md);
         }
 
+        // incoming_cast expressions: [unit.]incoming_cast.[filter.]<tags>.<property>
+        const incomingCastMatch = word.match(/^(?:(target|focus|mouseover)\.)?incoming_cast\.(.+)$/);
+        if (incomingCastMatch) {
+            const [, unitPrefix, rest] = incomingCastMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            // Parse segments left-to-right: optional filter, tags, property
+            const segments = rest.split('.');
+            const prop = segments.pop() || '';
+            let filter = '';
+            if (segments.length > 0 && ['player', 'cycle', '5y', '8y', '10y', '15y', '40y'].includes(segments[0])) {
+                filter = segments.shift()!;
+            }
+            const tag = segments.join('.');
+            const unitDesc = unitPrefix ? `\`${unitPrefix}\`` : 'any enemy';
+            const filterDesc = filter === 'player' ? ' targeting the player' : filter === 'cycle' ? ' targeting the cycle member' : filter ? ` within ${filter}` : '';
+            const tagDesc = tag ? ` tagged \`${tag}\`` : '';
+            md.appendMarkdown(`Checks if ${unitDesc} is casting a spell${tagDesc}${filterDesc} (from \`_casts.yaml\`).\n\n`);
+            if (tag && tag.includes('.')) {
+                md.appendMarkdown(`Multi-tag AND: requires ALL tags (${tag.split('.').map((t: string) => `\`${t}\``).join(' + ')})\n\n`);
+            }
+            if (prop === 'up' || prop === 'ready') md.appendMarkdown(`Returns \`1\` if matching cast found, \`0\` otherwise.`);
+            else if (prop === 'down') md.appendMarkdown(`Returns \`1\` if NO matching cast found, \`0\` otherwise.`);
+            else if (prop === 'remains') md.appendMarkdown(`Returns seconds until the soonest matching cast lands (min across all matches).`);
+            else if (prop === 'count') md.appendMarkdown(`Returns count of enemies casting matching spells.`);
+            return new vscode.Hover(md);
+        }
+
+        // buff_list.<tag>.property (tag-filtered buff detection from _aura.yaml)
+        const buffListTagMatch = word.match(/^(?:(player|target|focus|mouseover|cycle)\.)?buff_list\.(.+)\.(up|down|remains|count)$/);
+        if (buffListTagMatch) {
+            const [, unit, tag, prop] = buffListTagMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            const unitLabel = unit || 'player';
+            const propDesc: Record<string, string> = {
+                'up': `Returns 1 if ${unitLabel} has a tracked buff tagged \`${tag}\``,
+                'down': `Returns 1 if ${unitLabel} has NO tracked buff tagged \`${tag}\``,
+                'remains': `Max remaining seconds of \`${tag}\`-tagged buffs on ${unitLabel}`,
+                'count': `Count of active \`${tag}\`-tagged buffs on ${unitLabel}`,
+            };
+            md.appendMarkdown(propDesc[prop] || '');
+            md.appendMarkdown(`\n\n*Source: \`_aura.yaml\` → \`buffs:\`*`);
+            if (tag.includes('.')) {
+                md.appendMarkdown(`\n\nMulti-tag AND: requires ALL tags (${tag.split('.').map(t => `\`${t}\``).join(' + ')})`);
+            }
+            return new vscode.Hover(md);
+        }
+
+        // debuff_list.<tag>.property (tag-filtered debuff detection from _aura.yaml)
+        const debuffListTagMatch = word.match(/^(?:(player|target|focus|mouseover|cycle)\.)?debuff_list\.(.+)\.(up|down|remains|count)$/);
+        if (debuffListTagMatch) {
+            const [, unit, tag, prop] = debuffListTagMatch;
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(`**${word}**\n\n`);
+            const unitLabel = unit || 'player';
+            const propDesc: Record<string, string> = {
+                'up': `Returns 1 if ${unitLabel} has a tracked debuff tagged \`${tag}\``,
+                'down': `Returns 1 if ${unitLabel} has NO tracked debuff tagged \`${tag}\``,
+                'remains': `Max remaining seconds of \`${tag}\`-tagged debuffs on ${unitLabel}`,
+                'count': `Count of active \`${tag}\`-tagged debuffs on ${unitLabel}`,
+            };
+            md.appendMarkdown(propDesc[prop] || '');
+            md.appendMarkdown(`\n\n*Source: \`_aura.yaml\` → \`debuffs:\`*`);
+            if (tag.includes('.')) {
+                md.appendMarkdown(`\n\nMulti-tag AND: requires ALL tags (${tag.split('.').map(t => `\`${t}\``).join(' + ')})`);
+            }
+            return new vscode.Hover(md);
+        }
+
         return undefined;
     }
 
